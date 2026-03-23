@@ -1,0 +1,139 @@
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+body { background: #f4f5f7; font-family: 'Segoe UI', system-ui, sans-serif; color: #1e2333; }
+
+/* ── App header ──────────────────────────────────────────────────────────── */
+.app-header {
+  background: #fff;
+  border-bottom: 1px solid #e2e5ec;
+  padding: 1rem 0;
+  position: sticky; top: 0; z-index: 100;
+}
+.app-header h1 { font-size: 1.3rem; font-weight: 700; color: #1a1a2e; }
+.header-icon {
+  width: 42px; height: 42px;
+  background: #29BA00; border-radius: 10px;
+  display: grid; place-items: center;
+  color: #fff; font-size: 1.3rem;
+}
+
+/* ── Mode selector ───────────────────────────────────────────────────────── */
+.mode-card {
+  border: 2px solid #e2e5ec;
+  border-radius: 14px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all .15s;
+  background: #fff;
+  text-align: center;
+  height: 100%;
+}
+.mode-card:hover { border-color: #29BA00; box-shadow: 0 4px 16px rgba(41,186,0,.15); }
+.mode-card.selected { border-color: #29BA00; background: #f0fff0; }
+.mode-icon { font-size: 2.2rem; color: #29BA00; display: block; margin-bottom: .5rem; }
+.mode-title { font-weight: 700; font-size: 1.05rem; margin-bottom: .35rem; }
+.mode-desc { color: #666; font-size: .875rem; }
+
+/* ── Drop zone ───────────────────────────────────────────────────────────── */
+.drop-zone {
+  border: 2px dashed #c0cfe0;
+  border-radius: 12px;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  transition: all .15s;
+  background: #fafbff;
+  cursor: pointer;
+}
+.drop-zone.drag-over { border-color: #29BA00; background: #f0fff0; }
+
+/* ── Step navigation ─────────────────────────────────────────────────────── */
+.step-nav { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 4px; }
+.step-pill {
+  flex: 1; min-width: 72px;
+  padding: 8px 4px;
+  text-align: center;
+  border-radius: 8px;
+  font-size: .73rem; font-weight: 600;
+  color: #8a91a8; background: #e9ebf0;
+  cursor: pointer; transition: all .15s;
+  white-space: nowrap; border: none;
+}
+.step-pill.active  { background: #29BA00; color: #fff; }
+.step-pill.done    { background: #e6f9e6; color: #1a7f1a; }
+.step-pill.done::after { content: ' ✓'; }
+
+/* ── Step panels ─────────────────────────────────────────────────────────── */
+.step-panel { display: none; }
+.step-panel.active { display: block; }
+
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+.card { border: 1px solid #e2e5ec; border-radius: 12px; overflow: hidden; }
+.card-header {
+  background: #f8f9fc; border-bottom: 1px solid #e2e5ec;
+  font-weight: 600; font-size: .95rem; color: #1a1a2e;
+  padding: .75rem 1.25rem;
+}
+
+/* ── Dynamic list items ──────────────────────────────────────────────────── */
+.dynamic-item {
+  background: #f8f9fc;
+  border: 1px solid #e2e5ec;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: .75rem;
+  position: relative;
+}
+.dynamic-item .remove-btn {
+  position: absolute; top: .5rem; right: .75rem;
+  background: none; border: none;
+  color: #c0392b; font-size: 1.1rem;
+  cursor: pointer; padding: 0; line-height: 1;
+}
+.dynamic-item .remove-btn:hover { color: #e74c3c; }
+
+/* ── Tag input ───────────────────────────────────────────────────────────── */
+.tag-input-wrapper {
+  min-height: 44px; border: 1px solid #dee2e6; border-radius: .375rem;
+  padding: .35rem .5rem; display: flex; flex-wrap: wrap;
+  gap: 5px; align-items: center; background: #fff; cursor: text;
+}
+.tag-input-wrapper:focus-within {
+  border-color: #86b7fe; box-shadow: 0 0 0 .25rem rgba(13,110,253,.25);
+}
+.tag-chip {
+  background: #29BA00; color: #fff; border-radius: 20px;
+  padding: 2px 10px; font-size: .8rem;
+  display: flex; align-items: center; gap: 5px;
+}
+.tag-chip .remove-tag { cursor: pointer; font-size: .9rem; line-height: 1; }
+.tag-chip .remove-tag:hover { opacity: .75; }
+.tag-input { border: none; outline: none; flex: 1; min-width: 120px; font-size: .9rem; padding: 2px 4px; }
+
+/* ── Description rows ────────────────────────────────────────────────────── */
+.desc-entries { display: flex; flex-direction: column; gap: .5rem; margin-bottom: .5rem; }
+.desc-row { display: flex; gap: .5rem; align-items: flex-start; }
+.desc-row textarea { flex: 1; resize: vertical; }
+
+/* ── Section divider ─────────────────────────────────────────────────────── */
+.section-divider {
+  display: flex; align-items: center; gap: .75rem;
+  margin: 1.5rem 0 1rem;
+  color: #8a91a8; font-size: .8rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.section-divider::before, .section-divider::after {
+  content: ''; flex: 1; height: 1px; background: #e2e5ec;
+}
+
+/* ── Select Advisory badge ───────────────────────────────────────────────── */
+.sa-logo-badge {
+  display: inline-block;
+  background: #29BA00; color: #fff;
+  font-weight: 800; font-size: 1.1rem;
+  padding: .4rem 1.5rem; border-radius: 30px;
+  letter-spacing: .02em;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 576px) {
+  .step-pill { font-size: .65rem; padding: 6px 3px; }
+}
