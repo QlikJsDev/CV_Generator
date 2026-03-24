@@ -31,23 +31,8 @@
           <span class="btn-generate-icon">⬇</span>
           Generate CV
         </button>
-        <button class="btn-settings" id="btn-settings" title="API key settings">⚙</button>
       </div>
     </aside>
-
-    <!-- Settings panel -->
-    <div class="settings-overlay hidden" id="settings-overlay">
-      <div class="settings-panel">
-        <div class="settings-header">
-          <span>⚙ Settings</span>
-          <button class="settings-close" id="settings-close">✕</button>
-        </div>
-        <label class="settings-label">Anthropic API key</label>
-        <input type="password" id="settings-api-key" placeholder="sk-ant-…" autocomplete="off">
-        <p class="settings-hint">Stored in your browser (localStorage) — never sent anywhere except api.anthropic.com.</p>
-        <button class="settings-save" id="settings-save">Save</button>
-      </div>
-    </div>
 
     <main class="main" id="main">
       <div class="upload-banner hidden" id="upload-banner">
@@ -74,9 +59,10 @@
 
   <!-- PizZip from CDN (works in browser) -->
   <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js"></script>
-  <script src="claude-parser.js?v=6"></script>
+  <script src="config.js"></script>
+  <script src="claude-parser.js?v=7"></script>
   <script src="parser.js?v=5"></script>
   <script src="generator.js?v=5"></script>
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>

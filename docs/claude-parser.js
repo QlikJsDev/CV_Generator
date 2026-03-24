@@ -209,8 +209,8 @@ Rules:
 
 /* ── Public API ────────────────────────────────────────────────────────── */
 async function parseWithClaude(file) {
-  const apiKey = localStorage.getItem('sa_anthropic_api_key') || '';
-  if (!apiKey) throw new Error('No API key set — click ⚙ in the sidebar to configure it.');
+  const apiKey = (window.SA_CONFIG && window.SA_CONFIG.anthropicApiKey) || '';
+  if (!apiKey) throw new Error('API key not configured — check config.js or the GitHub Actions secret.');
 
   const ab  = await file.arrayBuffer();
   const zip = new PizZip(ab);
