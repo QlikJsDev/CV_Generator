@@ -26,9 +26,7 @@ function run(text, o = {}) {
 }
 
 function para(styleId, runsOrText, ppExtra = '') {
-  const runs = typeof runsOrText === 'string'
-    ? run(runsOrText)
-    : Array.isArray(runsOrText) ? runsOrText.join('') : (runsOrText || '');
+  const runs = Array.isArray(runsOrText) ? runsOrText.join('') : (runsOrText || '');
   const pPr = styleId || ppExtra
     ? `<w:pPr>${styleId ? `<w:pStyle w:val="${styleId}"/>` : ''}${ppExtra}</w:pPr>`
     : '';
