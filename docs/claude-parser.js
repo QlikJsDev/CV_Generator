@@ -175,14 +175,46 @@ async function parseWithClaude(file, apiKey) {
     proficiency: Math.max(1, Math.min(5, parseInt(l.proficiency) || 5)),
   }));
 
-  parsed.experiences = (parsed.experiences || []).map(e => ({
-    dates:       e.dates       || '',
-    title:       e.title       || '',
-    company:     e.company     || '',
-    description: Array.isArray(e.description) ? e.description : [],
-    tools:       e.tools       || '',
-    category:    e.category === 'pre_advisory' ? 'pre_advisory' : 'select_advisory',
-  }));
+  parsed.experiences = (parsed.experiences || []).map(e => {
+    let { dates='', title='', company='', description=[], tools='', category='' } = e;
+
+    // If Claude didn't split role from client, do it here
+    // [MISSION] format: "Role Title • Client" or "Role – Client"
+    if (!company && title) {
+      const sepIdx = title.indexOf(' \u2022 ');          // ' • '
+      const dashIdx = title.indexOf(' \u2013 ');         // ' – '
+      const split = sepIdx !== -1 ? sepIdx : dashIdx;
+      if (split !== -1) {
+        company = title.slice(split + 3).trim();
+        title   = title.slice(0, split).trim();
+      }
+    }
+
+    // description may come as a string (newline-separated) instead of array
+    if (typeof description === 'string') {
+      description = description.split('\n').map(s => s.trim()).filter(Boolean);
+    } else if (!Array.isArray(description)) {
+      description = [];
+    }
+
+    // Tools line sometimes ends up inside description — move it out
+    description = description.filter(line => {
+      if (/^tools\s*:/i.test(line)) {
+        if (!tools) tools = line.replace(/^tools\s*:\s*/i, '').trim();
+        return false;
+      }
+      return true;
+    });
+
+    return {
+      dates,
+      title,
+      company,
+      description,
+      tools:    tools || '',
+      category: category === 'pre_advisory' ? 'pre_advisory' : 'select_advisory',
+    };
+  });
 
   ['personalSkills','areasOfExpertise','technicalSkills',
    'education','certifications','careerTimeline'].forEach(k => {
