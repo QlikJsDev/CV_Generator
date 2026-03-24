@@ -1,19 +1,7 @@
-__pycache__/
-*.pyc
-*.pyo
+node_modules/
 .env
-*.egg-info/
-dist/
-build/
-.venv/
-venv/
 *.log
-
-# Original source .docx files (personal names, special chars)
-# The clean copy in word_templates/ is the one committed
-MGE - *.docx
-JFD - *.docx
-
-# Test / generated outputs
-test_*.docx
 *.generated.docx
+# original CV files with special chars in names
+JFD - *.docx
+MGE - *.docx
