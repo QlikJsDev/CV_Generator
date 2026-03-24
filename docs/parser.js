@@ -29,7 +29,7 @@ function getText(el) {
     let node = tNodes[i].parentNode;
     let skip = false;
     while (node && node !== el) {
-      if (node.localName === 'anchor' || node.localName === 'inline') { skip = true; break; }
+      if (node.localName === 'anchor' || node.localName === 'inline' || node.localName === 'txbxContent') { skip = true; break; }
       node = node.parentNode;
     }
     if (!skip) texts.push(tNodes[i].textContent || '');
@@ -221,6 +221,8 @@ function parseBody(bodyEl, result) {
     else if (hl.includes('certif') || hl.includes('training'))   parseCertifications(entries, result);
     else if (hl.includes('education') && !hl.includes('certif')) parseEducation(entries, result);
     else if (hl.includes('experience') || hl.includes('expérience') || hl.includes('experiences')) parseExperiences(entries, result);
+    // For any section: also scan for bio and career timeline (BD CV format)
+    parseBioAndTimeline(entries, result);
   }
 }
 
@@ -285,6 +287,44 @@ function parseEducation(paras, result) {
              : { years: '', degree: t, institution: '' };
   }).filter(Boolean);
 }
+function parseBioAndTimeline(paras, result) {
+  // Matches: "2014 – Present: Role..." or "2008-2013: Role at Company"
+  const dateRe = /^(\d{4}\s*[\u2013\-]\s*(?:\d{4}|[Tt]oday|[Pp]resent|[Nn]ow))\s*[:]\s*(.+)/;
+  for (const p of paras) {
+    const sty = getPStyle(p).toLowerCase();
+    if (sty && sty !== 'normal') continue;
+    const txt = getText(p).trim();
+    if (!txt) continue;
+
+    const dm = txt.match(dateRe);
+    if (dm) {
+      const dates = dm[1].trim().replace(/\s+/g, ' ');
+      const rest  = dm[2].trim();
+      let role = rest, company = '';
+      // Handle "at" possibly merged without space (e.g. "Leadat Agilos")
+      const atMatch = rest.match(/^(.*?)\s*\bat\s+(.+)$/i)
+                   || rest.match(/^(.*\w)at\s+(.+)$/);  // merged "Leadat Agilos"
+      if (atMatch) {
+        role = atMatch[1].trim();
+        company = atMatch[2].trim();
+      } else {
+        const dashSep = rest.includes(' \u2013 ') ? ' \u2013 ' : rest.includes(' - ') ? ' - ' : null;
+        if (dashSep) {
+          const parts = rest.split(dashSep);
+          company = parts[parts.length - 1].trim();
+          role = parts.slice(0, -1).join(dashSep).trim();
+        }
+      }
+      if (!result.careerTimeline.find(e => e.dates === dates))
+        result.careerTimeline.push({ dates, role, company });
+      continue;
+    }
+
+    // Long Normal paragraph → bio
+    if (txt.length > 100 && !result.bio) result.bio = txt;
+  }
+}
+
 function parseExperiences(paras, result) {
   result.experiences = result.experiences || [];
   let cur = null;
