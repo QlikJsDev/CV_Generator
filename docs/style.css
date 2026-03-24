@@ -216,6 +216,19 @@ body {
 .upload-status { margin-top: 12px; font-size: .85rem; min-height: 20px; }
 .upload-status.error   { color: #c0392b; }
 .upload-status.success { color: var(--green); }
+.api-key-row {
+  width: 100%; margin-bottom: 20px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+}
+.api-key-row label { font-size: .82rem; font-weight: 600; color: var(--grey-700); text-transform: uppercase; letter-spacing: .04em; }
+.api-key-row input {
+  width: 100%; max-width: 360px; padding: 8px 12px;
+  border: 1.5px solid var(--grey-300); border-radius: 8px;
+  font-size: .9rem; font-family: monospace; color: var(--grey-700);
+  background: var(--grey-50); outline: none; box-sizing: border-box;
+}
+.api-key-row input:focus { border-color: var(--blue); }
+.api-key-hint { font-size: .76rem; color: var(--grey-500); }
 
 /* ── Form section card ─────────────────────────────────────────────────── */
 .form-section {

@@ -613,12 +613,22 @@ document.querySelectorAll('.mode-btn').forEach(btn => {
 });
 
 /* ═══════════════════════════════════════════════════════════════════════
-   FILE UPLOAD + PARSE  (browser-side — calls window.parseCV directly)
+   FILE UPLOAD + PARSE  (uses Claude AI — falls back to local parser)
 ═══════════════════════════════════════════════════════════════════════ */
 const fileInput  = document.getElementById('file-input');
 const btnParse   = document.getElementById('btn-parse');
 const filenameEl = document.getElementById('upload-filename');
 const statusEl   = document.getElementById('upload-status');
+const apiKeyInput = document.getElementById('api-key-input');
+
+// Persist API key in localStorage
+const API_KEY_STORE = 'sa_anthropic_api_key';
+if (apiKeyInput) {
+  apiKeyInput.value = localStorage.getItem(API_KEY_STORE) || '';
+  apiKeyInput.addEventListener('input', () => {
+    localStorage.setItem(API_KEY_STORE, apiKeyInput.value.trim());
+  });
+}
 
 fileInput.addEventListener('change', () => {
   const file = fileInput.files[0];
@@ -649,29 +659,38 @@ if (uploadCard) {
 btnParse.addEventListener('click', async () => {
   const file = fileInput.files[0];
   if (!file) return;
+
+  const apiKey = (apiKeyInput?.value || '').trim();
+  if (!apiKey) {
+    statusEl.className = 'upload-status error';
+    statusEl.textContent = '✗ Please enter your Anthropic API key above.';
+    apiKeyInput?.focus();
+    return;
+  }
+
   btnParse.disabled = true;
-  btnParse.textContent = 'Parsing…';
+  btnParse.textContent = '✨ Calling Claude AI…';
   statusEl.className = 'upload-status';
-  statusEl.textContent = 'Reading your CV…';
+  statusEl.textContent = 'Sending CV to Claude — this may take a few seconds…';
 
   try {
-    const parsed = await parseCV(file);
+    const parsed = await parseWithClaude(file, apiKey);
     Object.assign(state.data, parsed);
     if (!Array.isArray(state.data.titles)) state.data.titles = state.data.titles ? [state.data.titles] : ['','',''];
     while (state.data.titles.length < 3) state.data.titles.push('');
 
     renderAll();
     statusEl.className = 'upload-status success';
-    statusEl.textContent = '✓ Form filled — review and edit below, then generate.';
+    statusEl.textContent = '✓ CV parsed by Claude AI — review and edit below, then generate.';
     document.querySelector('.mode-btn[data-mode="manual"]').click();
-    toast('CV imported successfully — form filled!', 'success');
+    toast('CV imported successfully!', 'success');
   } catch (err) {
     statusEl.className = 'upload-status error';
     statusEl.textContent = '✗ Error: ' + err.message;
     toast('Parse failed: ' + err.message, 'error');
   } finally {
     btnParse.disabled = false;
-    btnParse.textContent = 'Parse & fill form';
+    btnParse.textContent = '✨ Parse with Claude AI';
   }
 });
 
