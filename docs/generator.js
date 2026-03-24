@@ -42,16 +42,26 @@ const pDetail = t => para('JobDetails', run(t));
 const pDesc   = (t, bold=false) => para('Whitetext', run(t, { bold }));
 
 function sec1Boundary(hfRefs) {
-  return `<w:p><w:pPr><w:pStyle w:val="ListParagraph"/>
-    <w:sectPr>${hfRefs}<w:cols w:space="720"/><w:titlePg/></w:sectPr>
-  </w:pPr></w:p>`;
+  return `<w:p><w:pPr><w:pStyle w:val="ListParagraph"/><w:sectPr>`
+    + hfRefs
+    + `<w:pgSz w:w="11906" w:h="16838"/>`
+    + `<w:pgMar w:top="1276" w:right="566" w:bottom="993" w:left="709" w:header="0" w:footer="0" w:gutter="0"/>`
+    + `<w:pgNumType w:start="1"/>`
+    + `<w:cols w:space="720"/>`
+    + `<w:titlePg/>`
+    + `<w:docGrid w:linePitch="299"/>`
+    + `</w:sectPr></w:pPr></w:p>`;
 }
 function sec2Boundary() {
-  return `<w:p><w:pPr><w:sectPr>
-    <w:type w:val="continuous"/>
-    <w:cols w:num="2" w:space="720"/>
-    <w:titlePg/>
-  </w:sectPr></w:pPr></w:p>`;
+  return `<w:p><w:pPr><w:sectPr>`
+    + `<w:type w:val="continuous"/>`
+    + `<w:pgSz w:w="11906" w:h="16838"/>`
+    + `<w:pgMar w:top="1569" w:right="566" w:bottom="993" w:left="709" w:header="0" w:footer="0" w:gutter="0"/>`
+    + `<w:pgNumType w:start="1"/>`
+    + `<w:cols w:num="2" w:space="720"/>`
+    + `<w:titlePg/>`
+    + `<w:docGrid w:linePitch="299"/>`
+    + `</w:sectPr></w:pPr></w:p>`;
 }
 
 function buildTable(personalSkills, areasOfExpertise) {
@@ -87,9 +97,8 @@ function extractHFRefs(sectPr) {
 }
 
 // ── Build body ─────────────────────────────────────────────────────────────
-function buildBody(data, finalSectPr) {
-  const hfRefs = extractHFRefs(finalSectPr);
-  const out    = [];
+function buildBody(data, finalSectPr, hfRefs) {
+  const out = [];
 
   // Name
   out.push(h1(`${data.firstName||''} ${data.lastName||''}`.trim()));
@@ -188,7 +197,9 @@ async function generateCV(data) {
   const docXml = zip.file('word/document.xml').asText();
   const bodyXml = docXml.slice(docXml.indexOf('<w:body>')+8, docXml.lastIndexOf('</w:body>'));
   const sectPr  = extractFinalSectPr(bodyXml);
-  const newBody = buildBody(data, sectPr);
+  // HF refs live in the first embedded sectPr, not the final one
+  const hfRefs  = (bodyXml.match(/<w:(?:header|footer)Reference[^/]*\/>/g) || []).join('');
+  const newBody = buildBody(data, sectPr, hfRefs);
 
   const newDocXml = docXml.slice(0, docXml.indexOf('<w:body>')+8)
     + newBody
