@@ -1,139 +1,222 @@
 /**
- * CV parser powered by Claude API.
- * Extracts structured text (with paragraph-style markers) from a .docx file
- * and asks Claude to return a structured JSON object.
+ * CV parser powered by Claude API (tool_use / structured output).
+ * Uses Claude's tool_use to enforce a strict JSON schema — Claude must
+ * fill every field, no empty arrays or missing keys.
  * Requires PizZip to be loaded (CDN).
  */
 ;(function (global) {
 
 /* ── Structured text extraction ───────────────────────────────────────── */
 /**
- * Extracts paragraph text from the docx XML and prefixes each line with a
- * style tag so Claude can understand the document structure even without
- * seeing the original formatting.
+ * Prefixes each paragraph with a semantic tag so Claude understands
+ * the document structure without seeing the original formatting.
  *
- * Known Select Advisory / Beyond Data paragraph styles:
- *   JobDates    → [PERIOD]   e.g. "2016 – Today"
- *   JobDetails  → [MISSION]  e.g. "Qlik Sense Dev • BMW BeLux"  (role • client)
- *   Whitetext   → [DETAIL]   description bullets or "Tools: …"
- *   Heading1    → [SECTION]
- *   Heading2    → [SUBSECTION]
- *   ListParagraph → [ITEM]
- *   Normal      → (plain line)
+ *   [SECTION]    Heading1  — section title
+ *   [PERIOD]     JobDates  — date range for one experience
+ *   [MISSION]    JobDetails — "Role • Client"  (role before •, client after)
+ *   [DETAIL]     Whitetext — description bullet or tools line
+ *   [ITEM]       List      — skill / education / certification item
+ *   (plain line) Normal    — free text, bio, career summary line
  *
- * Sidebar / floating text-box content is excluded (txbxContent stripped).
+ * Sidebar / text-box content (txbxContent) is stripped first.
  */
 function extractStructuredText(zip) {
   const raw = zip.file('word/document.xml').asText();
 
-  // Remove sidebar/floating text-box content so it doesn't pollute body text
+  // ── Step 1: harvest text from every text box ─────────────────────────
+  // The candidate name + titles live in the first floating text box and
+  // are NOT in the main body flow — we must grab them before stripping.
+  const txbxTexts = [];
+  const txbxBlockRe = /<w:txbxContent>([\s\S]*?)<\/w:txbxContent>/g;
+  let tbm;
+  while ((tbm = txbxBlockRe.exec(raw)) !== null) {
+    const inner = tbm[1];
+    // Collect paragraphs inside this text box
+    const pRe = /<w:p[ >][\s\S]*?<\/w:p>/g;
+    let pm;
+    const boxLines = [];
+    while ((pm = pRe.exec(inner)) !== null) {
+      let t = '', tm;
+      const tRe = /<w:t[^>]*>([^<]*)<\/w:t>/g;
+      while ((tm = tRe.exec(pm[0])) !== null) t += tm[1];
+      t = t.replace(/&amp;/g,'&').replace(/&lt;/g,'<')
+           .replace(/&gt;/g,'>').replace(/&quot;/g,'"').trim();
+      if (t) boxLines.push(t);
+    }
+    if (boxLines.length) txbxTexts.push(boxLines.join('\n'));
+  }
+
+  // First text box = name + titles header
+  const headerSection = txbxTexts.length
+    ? `[CANDIDATE_HEADER]\n${txbxTexts[0]}\n`
+    : '';
+
+  // ── Step 2: body paragraphs with text boxes stripped ─────────────────
   const xml = raw.replace(/<w:txbxContent>[\s\S]*?<\/w:txbxContent>/g, '');
 
-  const lines = [];
-
-  // Iterate over every paragraph in document order
-  // Note: we use a simple regex; nested <w:p> inside VML are already removed above
-  const paraRe  = /<w:p[ >][\s\S]*?<\/w:p>/g;
+  const lines  = [];
+  const paraRe = /<w:p[ >][\s\S]*?<\/w:p>/g;
   const styleRe = /<w:pStyle w:val="([^"]+)"/;
-  const textRe  = () => /<w:t[^>]*>([^<]*)<\/w:t>/g;
 
   let m;
   while ((m = paraRe.exec(xml)) !== null) {
     const p = m[0];
 
-    // Collect all text runs
     let text = '';
     let tm;
-    const tr = textRe();
-    while ((tm = tr.exec(p)) !== null) text += tm[1];
+    const tRe = /<w:t[^>]*>([^<]*)<\/w:t>/g;
+    while ((tm = tRe.exec(p)) !== null) text += tm[1];
     text = text
       .replace(/&amp;/g, '&').replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#\d+;/g, '')
       .trim();
     if (!text) continue;
 
-    // Determine style
-    const sm = p.match(styleRe);
+    const sm    = p.match(styleRe);
     const style = sm ? sm[1].toLowerCase() : 'normal';
 
-    if      (style.includes('heading1'))   lines.push(`\n[SECTION] ${text}`);
-    else if (style.includes('heading2'))   lines.push(`[SUBSECTION] ${text}`);
-    else if (style.includes('jobdate'))    lines.push(`[PERIOD] ${text}`);
-    else if (style.includes('jobdetail'))  lines.push(`[MISSION] ${text}`);
-    else if (style.includes('whitetext'))  lines.push(`[DETAIL] ${text}`);
-    else if (style.includes('list'))       lines.push(`[ITEM] ${text}`);
-    else                                   lines.push(text);
+    if      (style.includes('heading1'))  lines.push(`\n[SECTION] ${text}`);
+    else if (style.includes('heading2'))  lines.push(`[SUBSECTION] ${text}`);
+    else if (style.includes('jobdate'))   lines.push(`[PERIOD] ${text}`);
+    else if (style.includes('jobdetail')) lines.push(`[MISSION] ${text}`);
+    else if (style.includes('whitetext')) lines.push(`[DETAIL] ${text}`);
+    else if (style.includes('list'))      lines.push(`[ITEM] ${text}`);
+    else                                  lines.push(text);
   }
 
-  return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  return (headerSection + lines.join('\n'))
+    .replace(/\n{3,}/g, '\n\n').trim();
 }
 
-/* ── Prompt ────────────────────────────────────────────────────────────── */
+/* ── Tool schema ───────────────────────────────────────────────────────── */
+const EXTRACT_TOOL = {
+  name: 'extract_cv',
+  description: 'Extract all information from a CV into a structured format for Select Advisory.',
+  input_schema: {
+    type: 'object',
+    required: [
+      'firstName','lastName','birthDate','titles','bio',
+      'careerTimeline','knowHow','personalSkills','areasOfExpertise',
+      'technicalSkills','languages','education','certifications','experiences'
+    ],
+    properties: {
+      firstName:       { type: 'string' },
+      lastName:        { type: 'string' },
+      birthDate:       { type: 'string', description: 'e.g. "January 1, 1980" or empty string' },
+      titles:          { type: 'array', items: { type: 'string' }, description: 'Up to 3 job titles shown under the name' },
+      bio:             { type: 'string', description: 'Full introductory / professional-summary paragraph' },
+      careerTimeline:  {
+        type: 'array',
+        description: 'High-level career summary entries (not detailed missions)',
+        items: {
+          type: 'object', required: ['dates','role','company'],
+          properties: {
+            dates:   { type: 'string' },
+            role:    { type: 'string' },
+            company: { type: 'string' },
+          },
+        },
+      },
+      knowHow:          { type: 'string', description: 'Brief domain expertise description or empty string' },
+      personalSkills:   { type: 'array', items: { type: 'string' } },
+      areasOfExpertise: { type: 'array', items: { type: 'string' } },
+      technicalSkills:  { type: 'array', items: { type: 'string' } },
+      languages: {
+        type: 'array',
+        items: {
+          type: 'object', required: ['language','proficiency'],
+          properties: {
+            language:    { type: 'string' },
+            proficiency: { type: 'integer', minimum: 1, maximum: 5,
+              description: '5=native/fluent 4=advanced 3=intermediate 2=elementary 1=basic' },
+          },
+        },
+      },
+      education: {
+        type: 'array',
+        items: {
+          type: 'object', required: ['years','degree','institution'],
+          properties: {
+            years:       { type: 'string' },
+            degree:      { type: 'string' },
+            institution: { type: 'string' },
+          },
+        },
+      },
+      certifications: {
+        type: 'array',
+        items: {
+          type: 'object', required: ['year','name'],
+          properties: {
+            year: { type: 'string' },
+            name: { type: 'string' },
+          },
+        },
+      },
+      experiences: {
+        type: 'array',
+        description: 'All professional experiences, reverse chronological order',
+        items: {
+          type: 'object',
+          required: ['dates','title','company','description','tools','category'],
+          properties: {
+            dates:   { type: 'string', description: 'Period of the mission e.g. "2022 – 2025"' },
+            title:   { type: 'string', description: 'Role / mission title ONLY — do NOT include the client name here' },
+            company: {
+              type: 'string',
+              description: 'Client or company name ONLY. In [MISSION] lines, the part AFTER " • " or " – " is the client.',
+            },
+            description: {
+              type: 'array', items: { type: 'string' },
+              description: '[DETAIL] lines that describe the work done (not the tools). Extract every bullet.',
+            },
+            tools: {
+              type: 'string',
+              description: '[DETAIL] line(s) that list software/tools used. Often the last [DETAIL] under a mission.',
+            },
+            category: {
+              type: 'string', enum: ['select_advisory','pre_advisory'],
+              description: '"pre_advisory" for experience BEFORE Select Advisory / Agilos / Beyond Data',
+            },
+          },
+        },
+      },
+    },
+  },
+};
+
+/* ── System prompt ─────────────────────────────────────────────────────── */
 const SYSTEM = `\
 You are a CV data extraction specialist for Select Advisory, a Belgian BI consulting firm.
-You receive CV text that may contain structural markers:
-  [SECTION]    → main heading (e.g. "Professional experience")
-  [SUBSECTION] → sub-heading
-  [PERIOD]     → date range for an experience (e.g. "2016 – Today")
-  [MISSION]    → role and client, often formatted as "Role Title • Client Name"
-                 → split these: everything before " • " or " – " is the role/title,
-                   everything after is the client/company name.
-  [DETAIL]     → a description bullet point OR a tools line starting with "Tools:"
-  [ITEM]       → a list item (skill, education entry, certification, etc.)
-
-Extract ALL information and return a single valid JSON object.
-If a field is absent, return an empty string or empty array.`;
-
-const USER_PREFIX = `\
-Extract ALL information from this CV and return a JSON object with EXACTLY these fields:
-
-{
-  "firstName": "string",
-  "lastName": "string",
-  "birthDate": "string — e.g. 'January 1, 1980', or ''",
-  "titles": ["up to 3 job-title strings shown under the name"],
-  "bio": "string — introductory / professional-summary paragraph",
-  "careerTimeline": [
-    { "dates": "e.g. '2019 – today'", "role": "job title", "company": "employer" }
-  ],
-  "knowHow": "string — brief domain-expertise description, or ''",
-  "personalSkills": ["soft-skill strings"],
-  "areasOfExpertise": ["industry / domain strings"],
-  "technicalSkills": ["tool or technology strings"],
-  "languages": [{ "language": "name", "proficiency": 5 }],
-  "education": [
-    { "years": "e.g. '2004-2008'", "degree": "degree name", "institution": "school" }
-  ],
-  "certifications": [{ "year": "2024", "name": "certification name" }],
-  "experiences": [
-    {
-      "dates":       "from [PERIOD] line",
-      "title":       "role part — before ' • ' or ' – ' in [MISSION] line",
-      "company":     "client/company part — after ' • ' or ' – ' in [MISSION] line",
-      "description": ["each [DETAIL] line that is NOT a tools line"],
-      "tools":       "content of [DETAIL] line that starts with 'Tools:' (strip the prefix)",
-      "category":    "select_advisory or pre_advisory"
-    }
-  ]
-}
+The CV text uses structural markers:
+  [CANDIDATE_HEADER] = the very first block — contains the candidate's full name and job titles.
+                       First line (or words) = full name → split into firstName / lastName.
+                       Remaining lines = titles[] (up to 3).
+  [SECTION]  = main heading
+  [PERIOD]   = date range for one experience block
+  [MISSION]  = role and client, separated by " • " or " – "
+               → "title" is the part BEFORE the separator
+               → "company" is the part AFTER the separator
+  [DETAIL]   = a description bullet OR the tools line (usually the last one under a mission, listing software)
+  [ITEM]     = list item (skill, education, certification)
 
 Rules:
-- [MISSION] lines often use ' • ' or ' – ' to separate role from client; split accordingly.
-- [DETAIL] lines that start with 'Tools:' go into "tools"; all others are "description" bullets.
-- "category" = "pre_advisory" for experience BEFORE joining Select Advisory / Agilos / Beyond Data.
-- Language proficiency: 5=native/fluent, 4=advanced, 3=intermediate, 2=elementary, 1=basic.
-- Experiences in reverse chronological order (most recent first).
-- careerTimeline = high-level career summary (not detailed missions).
-- Return ONLY the JSON object — no markdown fences, no explanation.
-
-CV TEXT:
-`;
+- Extract firstName and lastName from [CANDIDATE_HEADER]. The last word of the first line is usually the last name.
+- Split [MISSION] on " • " or " – ": left part → title, right part → company. Never put both in title.
+- Collect ALL [DETAIL] lines for each experience. Descriptive sentences → description[]. Tool lists → tools.
+- A tools line is typically a short comma/slash-separated list of software names, not a full sentence.
+- Fill every field. Use empty string or [] only when the information is truly absent from the CV.`;
 
 /* ── Public API ────────────────────────────────────────────────────────── */
-async function parseWithClaude(file, apiKey) {
+async function parseWithClaude(file) {
+  const apiKey = (window.SA_CONFIG && window.SA_CONFIG.anthropicApiKey) || '';
+  if (!apiKey) throw new Error('No Anthropic API key configured. Fill in docs/config.js.');
+
   const ab  = await file.arrayBuffer();
   const zip = new PizZip(ab);
   const cvText = extractStructuredText(zip);
+
+  console.log('[CV Parser] Structured text sent to Claude:\n', cvText);
 
   const resp = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -147,7 +230,9 @@ async function parseWithClaude(file, apiKey) {
       model: 'claude-sonnet-4-6',
       max_tokens: 8192,
       system: SYSTEM,
-      messages: [{ role: 'user', content: USER_PREFIX + cvText }],
+      tools: [EXTRACT_TOOL],
+      tool_choice: { type: 'tool', name: 'extract_cv' },
+      messages: [{ role: 'user', content: `Extract all CV data from the following text:\n\n${cvText}` }],
     }),
   });
 
@@ -158,46 +243,44 @@ async function parseWithClaude(file, apiKey) {
   }
 
   const data = await resp.json();
-  let text = (data.content[0]?.text || '').trim();
+  console.log('[CV Parser] Raw Claude response:', data);
 
-  // Strip markdown code fences if Claude added them anyway
-  const fenced = text.match(/```(?:json)?\s*([\s\S]+?)\s*```/);
-  if (fenced) text = fenced[1].trim();
-
-  const parsed = JSON.parse(text);
+  // With tool_use, the result is in content[].input of the tool_use block
+  const toolBlock = (data.content || []).find(c => c.type === 'tool_use' && c.name === 'extract_cv');
+  if (!toolBlock) throw new Error('Claude did not return structured CV data. Check the browser console.');
+  const parsed = toolBlock.input;
+  console.log('[CV Parser] Parsed data:', parsed);
 
   // ── Normalise ─────────────────────────────────────────────────────────
   if (!Array.isArray(parsed.titles)) parsed.titles = parsed.titles ? [String(parsed.titles)] : [];
   while (parsed.titles.length < 3) parsed.titles.push('');
 
   parsed.languages = (parsed.languages || []).map(l => ({
-    language: l.language || '',
+    language:    l.language    || '',
     proficiency: Math.max(1, Math.min(5, parseInt(l.proficiency) || 5)),
   }));
 
   parsed.experiences = (parsed.experiences || []).map(e => {
     let { dates='', title='', company='', description=[], tools='', category='' } = e;
 
-    // If Claude didn't split role from client, do it here
-    // [MISSION] format: "Role Title • Client" or "Role – Client"
+    // Safety: split title on bullet/dash if company still empty
     if (!company && title) {
-      const sepIdx = title.indexOf(' \u2022 ');          // ' • '
-      const dashIdx = title.indexOf(' \u2013 ');         // ' – '
-      const split = sepIdx !== -1 ? sepIdx : dashIdx;
-      if (split !== -1) {
-        company = title.slice(split + 3).trim();
-        title   = title.slice(0, split).trim();
+      const re = /^(.+?)\s*[•\u2022·\u00B7]\s*(.+)$|^(.+?)\s+\u2013\s+(.+)$/;
+      const hit = title.match(re);
+      if (hit) {
+        title   = (hit[1] || hit[3] || '').trim();
+        company = (hit[2] || hit[4] || '').trim();
       }
     }
 
-    // description may come as a string (newline-separated) instead of array
+    // Coerce description to array
     if (typeof description === 'string') {
       description = description.split('\n').map(s => s.trim()).filter(Boolean);
     } else if (!Array.isArray(description)) {
       description = [];
     }
 
-    // Tools line sometimes ends up inside description — move it out
+    // Move any "Tools: …" line that ended up in description[] into tools
     description = description.filter(line => {
       if (/^tools\s*:/i.test(line)) {
         if (!tools) tools = line.replace(/^tools\s*:\s*/i, '').trim();
@@ -211,7 +294,7 @@ async function parseWithClaude(file, apiKey) {
       title,
       company,
       description,
-      tools:    tools || '',
+      tools:    String(tools || ''),
       category: category === 'pre_advisory' ? 'pre_advisory' : 'select_advisory',
     };
   });

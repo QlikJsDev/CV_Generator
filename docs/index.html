@@ -41,11 +41,6 @@
           <h2>Import a Beyond Data CV</h2>
           <p>Drop a <code>.docx</code> file here or click to browse.<br>
              All fields will be auto-filled — you can edit before generating.</p>
-          <div class="api-key-row">
-            <label for="api-key-input">Anthropic API key</label>
-            <input type="password" id="api-key-input" placeholder="sk-ant-…" autocomplete="off">
-            <span class="api-key-hint">Stored locally — never sent anywhere except api.anthropic.com</span>
-          </div>
           <label class="btn-upload-label" for="file-input">
             Choose file
             <input type="file" id="file-input" accept=".docx" hidden>
@@ -64,7 +59,9 @@
 
   <!-- PizZip from CDN (works in browser) -->
   <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js"></script>
-  <script src="claude-parser.js?v=3"></script>
+  <!-- Local config (not committed — copy config.example.js → config.js) -->
+  <script src="config.js"></script>
+  <script src="claude-parser.js?v=5"></script>
   <script src="parser.js?v=5"></script>
   <script src="generator.js?v=5"></script>
   <script src="app.js?v=6"></script>

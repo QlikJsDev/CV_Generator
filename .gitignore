@@ -1,6 +1,7 @@
 node_modules/
 .env
 *.log
+docs/config.js
 *.generated.docx
 # original CV files with special chars in names
 JFD - *.docx

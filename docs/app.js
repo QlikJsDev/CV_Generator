@@ -619,16 +619,6 @@ const fileInput  = document.getElementById('file-input');
 const btnParse   = document.getElementById('btn-parse');
 const filenameEl = document.getElementById('upload-filename');
 const statusEl   = document.getElementById('upload-status');
-const apiKeyInput = document.getElementById('api-key-input');
-
-// Persist API key in localStorage
-const API_KEY_STORE = 'sa_anthropic_api_key';
-if (apiKeyInput) {
-  apiKeyInput.value = localStorage.getItem(API_KEY_STORE) || '';
-  apiKeyInput.addEventListener('input', () => {
-    localStorage.setItem(API_KEY_STORE, apiKeyInput.value.trim());
-  });
-}
 
 fileInput.addEventListener('change', () => {
   const file = fileInput.files[0];
@@ -660,21 +650,13 @@ btnParse.addEventListener('click', async () => {
   const file = fileInput.files[0];
   if (!file) return;
 
-  const apiKey = (apiKeyInput?.value || '').trim();
-  if (!apiKey) {
-    statusEl.className = 'upload-status error';
-    statusEl.textContent = '✗ Please enter your Anthropic API key above.';
-    apiKeyInput?.focus();
-    return;
-  }
-
   btnParse.disabled = true;
   btnParse.textContent = '✨ Calling Claude AI…';
   statusEl.className = 'upload-status';
   statusEl.textContent = 'Sending CV to Claude — this may take a few seconds…';
 
   try {
-    const parsed = await parseWithClaude(file, apiKey);
+    const parsed = await parseWithClaude(file);
     Object.assign(state.data, parsed);
     if (!Array.isArray(state.data.titles)) state.data.titles = state.data.titles ? [state.data.titles] : ['','',''];
     while (state.data.titles.length < 3) state.data.titles.push('');
