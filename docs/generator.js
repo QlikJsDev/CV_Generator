@@ -36,9 +36,7 @@ function para(styleId, runsOrText, ppExtra = '') {
 const h1      = t => para('Heading1', run(t));
 const h2      = t => para('Heading2', run(t));
 const pNormal = r => para('Normal', r);
-const pList   = t => para('ListParagraph', run(t));
 const pDates  = t => para('JobDates', run(t, { font:'Barlow', sz:22 }));
-const pDetail = t => para('JobDetails', run(t));
 const pDesc   = (t, bold=false) => para('Whitetext', run(t, { bold }));
 
 function sec1Boundary(hfRefs) {
@@ -71,7 +69,7 @@ function buildTable(personalSkills, areasOfExpertise) {
     return `<w:tc>
       <w:tcPr><w:tcBorders>${noBorder}</w:tcBorders></w:tcPr>
       ${para('Normal', run(title, {bold:true,italic:true}))}
-      ${(items||[]).map(i => `<w:p><w:pPr><w:pStyle w:val="ListParagraph"/><w:spacing w:after="0"/></w:pPr>${run('\u2022\t'+i)}</w:p>`).join('')}
+      ${(items||[]).map(i => `<w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr>${run('\u2022 '+i)}</w:p>`).join('')}
     </w:tc>`;
   }
   return `<w:tbl>
@@ -97,7 +95,14 @@ function extractHFRefs(sectPr) {
 }
 
 // ── Build body ─────────────────────────────────────────────────────────────
-function buildBody(data, finalSectPr, hfRefs) {
+function buildBody(data, finalSectPr, hfRefs, listNumId) {
+  const numId = listNumId || '9';
+  const pList   = t => `<w:p><w:pPr><w:pStyle w:val="ListParagraph"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="${numId}"/></w:numPr></w:pPr>${run(t)}</w:p>`;
+  const pDetail = (title, company) => {
+    const r1 = title   ? run(title,               { color: '3756F5' })              : '';
+    const r2 = company ? run(' \u2022 ' + company, { color: '56AF89', bold: true }) : '';
+    return para('JobDetails', r1 + r2);
+  };
   const out = [];
 
   // Name
@@ -168,8 +173,7 @@ function buildBody(data, finalSectPr, hfRefs) {
   function pushExps(exps) {
     exps.forEach(exp => {
       if (exp.dates) out.push(pDates(exp.dates));
-      const title = [exp.title, exp.company].filter(Boolean).join(' \u2013 ');
-      if (title) out.push(pDetail(title));
+      if (exp.title || exp.company) out.push(pDetail(exp.title||'', exp.company||''));
       (exp.description||[]).filter(Boolean).forEach(d => out.push(pDesc(d)));
       if (exp.tools) out.push(pDesc(`Tools: ${exp.tools}`, true));
     });
@@ -198,8 +202,11 @@ async function generateCV(data) {
   const bodyXml = docXml.slice(docXml.indexOf('<w:body>')+8, docXml.lastIndexOf('</w:body>'));
   const sectPr  = extractFinalSectPr(bodyXml);
   // HF refs live in the first embedded sectPr, not the final one
-  const hfRefs  = (bodyXml.match(/<w:(?:header|footer)Reference[^/]*\/>/g) || []).join('');
-  const newBody = buildBody(data, sectPr, hfRefs);
+  const hfRefs     = (bodyXml.match(/<w:(?:header|footer)Reference[^/]*\/>/g) || []).join('');
+  // numId for ListParagraph bullets (extracted from template)
+  const numIdMatch = bodyXml.match(/<w:pStyle w:val="ListParagraph"[\s\S]{0,500}?<w:numId w:val="([^"]+)"/);
+  const listNumId  = numIdMatch ? numIdMatch[1] : '9';
+  const newBody    = buildBody(data, sectPr, hfRefs, listNumId);
 
   const newDocXml = docXml.slice(0, docXml.indexOf('<w:body>')+8)
     + newBody
