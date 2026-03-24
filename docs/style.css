@@ -134,7 +134,7 @@ body {
 .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
 
 /* ── Sidebar footer ────────────────────────────────────────────────────── */
-.sidebar-footer { padding: 0 14px; }
+.sidebar-footer { padding: 0 14px; display: flex; align-items: center; gap: 8px; }
 .btn-generate {
   width: 100%;
   background: var(--green);
@@ -156,6 +156,49 @@ body {
 .btn-generate:hover { background: #22a300; }
 .btn-generate:disabled { opacity: .55; cursor: not-allowed; }
 .btn-generate-icon { font-size: 1.1rem; }
+.btn-settings {
+  flex-shrink: 0; width: 36px; height: 36px; border-radius: 8px;
+  border: 1.5px solid var(--grey-300); background: var(--grey-50);
+  color: var(--grey-500); font-size: 1rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--transition);
+}
+.btn-settings:hover { border-color: var(--navy); color: var(--navy); background: var(--grey-100); }
+
+/* ── Settings panel ────────────────────────────────────────────────────── */
+.settings-overlay {
+  position: fixed; inset: 0; background: rgba(12,64,100,.35);
+  z-index: 200; display: flex; align-items: center; justify-content: center;
+}
+.settings-panel {
+  background: var(--white); border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(12,64,100,.18);
+  padding: 28px; width: 380px; max-width: 92vw;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.settings-header {
+  display: flex; justify-content: space-between; align-items: center;
+  font-weight: 700; font-size: 1rem; color: var(--navy);
+}
+.settings-close {
+  background: none; border: none; font-size: 1rem;
+  color: var(--grey-500); cursor: pointer; padding: 2px 6px; border-radius: 4px;
+}
+.settings-close:hover { background: var(--grey-100); color: var(--navy); }
+.settings-label { font-size: .82rem; font-weight: 600; color: var(--grey-700); text-transform: uppercase; letter-spacing: .04em; }
+.settings-panel input[type="password"] {
+  width: 100%; padding: 9px 12px; border: 1.5px solid var(--grey-300);
+  border-radius: 8px; font-size: .9rem; font-family: monospace;
+  outline: none; box-sizing: border-box;
+}
+.settings-panel input[type="password"]:focus { border-color: var(--blue); }
+.settings-hint { font-size: .78rem; color: var(--grey-500); margin: 0; }
+.settings-save {
+  align-self: flex-end; padding: 8px 20px; background: var(--navy);
+  color: var(--white); border: none; border-radius: 8px;
+  font-size: .9rem; font-weight: 600; cursor: pointer;
+}
+.settings-save:hover { background: #0a3454; }
 
 /* ── Main content ──────────────────────────────────────────────────────── */
 .main {

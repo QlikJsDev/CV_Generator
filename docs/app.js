@@ -718,6 +718,35 @@ function toast(msg, type = '') {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
+   SETTINGS PANEL (API key stored in localStorage)
+═══════════════════════════════════════════════════════════════════════ */
+const API_KEY_STORE = 'sa_anthropic_api_key';
+const settingsOverlay = document.getElementById('settings-overlay');
+const settingsApiKey  = document.getElementById('settings-api-key');
+
+function openSettings() {
+  settingsApiKey.value = localStorage.getItem(API_KEY_STORE) || '';
+  settingsOverlay.classList.remove('hidden');
+  settingsApiKey.focus();
+}
+function closeSettings() {
+  settingsOverlay.classList.add('hidden');
+}
+
+document.getElementById('btn-settings').addEventListener('click', openSettings);
+document.getElementById('settings-close').addEventListener('click', closeSettings);
+document.getElementById('settings-save').addEventListener('click', () => {
+  const key = settingsApiKey.value.trim();
+  if (key) localStorage.setItem(API_KEY_STORE, key);
+  else     localStorage.removeItem(API_KEY_STORE);
+  closeSettings();
+  toast('API key saved.', 'success');
+});
+settingsOverlay.addEventListener('click', e => {
+  if (e.target === settingsOverlay) closeSettings();
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════════════════════════ */
 renderSidebar();
