@@ -25,11 +25,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Inject API key into config.js
+      - name: Inject secrets into config.js
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_API_KEY:  ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL:       ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY:  ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          echo "window.SA_CONFIG = { anthropicApiKey: '${ANTHROPIC_API_KEY}' };" > docs/config.js
+          cat > docs/config.js <<EOF
+          window.SA_CONFIG = {
+            anthropicApiKey: '${ANTHROPIC_API_KEY}',
+            supabaseUrl:     '${SUPABASE_URL}',
+            supabaseAnonKey: '${SUPABASE_ANON_KEY}',
+          };
+          EOF
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

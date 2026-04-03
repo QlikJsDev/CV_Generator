@@ -666,6 +666,7 @@ btnParse.addEventListener('click', async () => {
     statusEl.textContent = '✓ CV parsed by Claude AI — review and edit below, then generate.';
     document.querySelector('.mode-btn[data-mode="manual"]').click();
     toast('CV imported successfully!', 'success');
+    await saveProfileToDB(state.data);
   } catch (err) {
     statusEl.className = 'upload-status error';
     statusEl.textContent = '✗ Error: ' + err.message;
@@ -686,6 +687,7 @@ document.getElementById('btn-generate').addEventListener('click', async () => {
   btn.innerHTML = '<span class="btn-generate-icon">⏳</span> Generating…';
 
   try {
+    syncFormToState();
     const blob = await generateCV(state.data);
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
@@ -698,6 +700,7 @@ document.getElementById('btn-generate').addEventListener('click', async () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     toast('CV generated!', 'success');
+    await saveProfileToDB(state.data);
   } catch (err) {
     toast('Error: ' + err.message, 'error');
   } finally {
@@ -718,7 +721,81 @@ function toast(msg, type = '') {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
+   SUPABASE HELPERS
+═══════════════════════════════════════════════════════════════════════ */
+async function saveProfileToDB(data) {
+  if (!cvDB.isConfigured()) return;
+  if (!data.firstName || !data.lastName) return;
+  try {
+    await cvDB.upsertProfile(data);
+    await initProfileSelector();  // refresh dropdown
+    const sel = document.getElementById('profile-select');
+    if (sel) sel.value = `${data.firstName}|${data.lastName}`;
+    toast(`Profile saved: ${data.lastName} ${data.firstName}`, 'success');
+  } catch (err) {
+    console.warn('DB save failed:', err.message);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SUPABASE PROFILE SELECTOR
+═══════════════════════════════════════════════════════════════════════ */
+async function initProfileSelector() {
+  const sel = document.getElementById('profile-select');
+  if (!sel || !cvDB.isConfigured()) return;
+  try {
+    const profiles = await cvDB.listProfiles();
+    sel.innerHTML =
+      '<option value="">— New profile —</option>' +
+      profiles.map(p =>
+        `<option value="${h(p.first_name)}|${h(p.last_name)}">${h(p.last_name)} ${h(p.first_name)}</option>`
+      ).join('');
+    // Restore current selection if name already in state
+    const cur = `${state.data.firstName}|${state.data.lastName}`;
+    if ([...sel.options].some(o => o.value === cur)) sel.value = cur;
+  } catch (err) {
+    console.warn('Profile list failed:', err.message);
+  }
+}
+
+document.getElementById('profile-select')?.addEventListener('change', async e => {
+  const val = e.target.value;
+  if (!val) return;
+  const [firstName, lastName] = val.split('|');
+  try {
+    const data = await cvDB.loadProfile(firstName, lastName);
+    if (!data) { toast('Profile not found.', 'error'); return; }
+    Object.assign(state.data, data);
+    if (!Array.isArray(state.data.titles)) state.data.titles = ['', '', ''];
+    while (state.data.titles.length < 3) state.data.titles.push('');
+    renderAll();
+    // Switch to manual mode so form is visible
+    document.querySelector('.mode-btn[data-mode="manual"]').click();
+    toast(`${lastName} ${firstName} loaded.`, 'success');
+  } catch (err) {
+    toast('Load error: ' + err.message, 'error');
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SAVE BUTTON
+═══════════════════════════════════════════════════════════════════════ */
+document.getElementById('btn-save-db').addEventListener('click', async () => {
+  syncFormToState();
+  const btn = document.getElementById('btn-save-db');
+  btn.disabled = true;
+  btn.textContent = '💾 Saving…';
+  try {
+    await saveProfileToDB(state.data);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Save profile';
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════════════════════════ */
 renderSidebar();
 renderAll();
+initProfileSelector();

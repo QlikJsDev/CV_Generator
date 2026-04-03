@@ -80,6 +80,34 @@ body {
   text-transform: uppercase;
 }
 
+/* ── Profile selector ─────────────────────────────────────────────────── */
+.profile-selector-wrap {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+.profile-label {
+  display: block;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.55);
+  margin-bottom: 5px;
+}
+.profile-select {
+  width: 100%;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 6px;
+  color: var(--white);
+  padding: 6px 8px;
+  font-size: .85rem;
+  cursor: pointer;
+  outline: none;
+}
+.profile-select:hover { background: rgba(255,255,255,.14); }
+.profile-select option { background: var(--navy); color: var(--white); }
+
 /* ── Input mode toggle ─────────────────────────────────────────────────── */
 .input-mode-toggle {
   display: flex;
@@ -134,7 +162,26 @@ body {
 .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
 
 /* ── Sidebar footer ────────────────────────────────────────────────────── */
-.sidebar-footer { padding: 0 14px; display: flex; align-items: center; gap: 8px; }
+.sidebar-footer {
+  padding: 0 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.btn-save-db {
+  width: 100%;
+  background: rgba(255,255,255,.10);
+  color: var(--white);
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: .88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.btn-save-db:hover { background: rgba(255,255,255,.20); }
+.btn-save-db:disabled { opacity: .5; cursor: default; }
 .btn-generate {
   width: 100%;
   background: var(--green);

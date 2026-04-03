@@ -19,6 +19,13 @@
         <div class="brand-sub">Select Advisory</div>
       </div>
 
+      <div class="profile-selector-wrap">
+        <label class="profile-label">Load profile</label>
+        <select id="profile-select" class="profile-select">
+          <option value="">— New profile —</option>
+        </select>
+      </div>
+
       <div class="input-mode-toggle">
         <button class="mode-btn active" data-mode="manual">✏️ Manual</button>
         <button class="mode-btn" data-mode="upload">📄 Import BD</button>
@@ -27,6 +34,7 @@
       <nav class="sidebar-nav" id="sidebar-nav"></nav>
 
       <div class="sidebar-footer">
+        <button class="btn-save-db" id="btn-save-db" title="Save profile to database">💾 Save profile</button>
         <button class="btn-generate" id="btn-generate">
           <span class="btn-generate-icon">⬇</span>
           Generate CV
@@ -59,7 +67,10 @@
 
   <!-- PizZip from CDN (works in browser) -->
   <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js"></script>
+  <!-- Supabase JS client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>
+  <script src="supabase-db.js"></script>
   <script src="claude-parser.js?v=7"></script>
   <script src="parser.js?v=5"></script>
   <script src="generator.js?v=5"></script>
