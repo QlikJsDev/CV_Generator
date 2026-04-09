@@ -547,17 +547,28 @@ async function generateBDCV(data) {
   });
 
   // Split at the end of the drawing run — keep everything up to and including
-  // </mc:AlternateContent></w:r>, then add bio run + close </w:p>
+  // </mc:AlternateContent></w:r>, then add bio runs + "Professional summary" heading text + close </w:p>
+  //
+  // Template Para 2 structure after the drawing:
+  //   <w:r rPr=Urbanist22><w:t>bio text</w:t></w:r>
+  //   <w:r rPr=Urbanist22><w:br/></w:r>          ← line break within bio
+  //   <w:r rPr=Urbanist22><w:br/></w:r>          ← empty line before heading
+  //   <w:r><w:t>Professional summary</w:t></w:r> ← plain run → inherits Heading1 style
+  //
+  // "Professional summary" MUST be here as the Heading1 paragraph's text.
   const DRAW_END = '</mc:AlternateContent></w:r>';
   const splitAt = para2raw.lastIndexOf(DRAW_END);
   let para2;
   if (splitAt !== -1) {
     const drawingPart = para2raw.slice(0, splitAt + DRAW_END.length);
     const bioRpr = `<w:rPr><w:rFonts w:ascii="Urbanist" w:hAnsi="Urbanist" w:cs="Urbanist"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr>`;
+    const brRpr  = `<w:rPr><w:rFonts w:ascii="Urbanist" w:eastAsiaTheme="minorEastAsia" w:hAnsi="Urbanist" w:cstheme="minorBidi"/><w:color w:val="auto"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr>`;
     const bioRun = data.bio
       ? `<w:r>${bioRpr}<w:t xml:space="preserve">${esc(data.bio)}</w:t></w:r>`
       : '';
-    para2 = drawingPart + bioRun + '</w:p>';
+    // Two line breaks + "Professional summary" plain run (no rPr → Heading1 style)
+    const tailRuns = `<w:r>${brRpr}<w:br/></w:r><w:r>${brRpr}<w:br/></w:r><w:r><w:t>Professional summary</w:t></w:r>`;
+    para2 = drawingPart + bioRun + tailRuns + '</w:p>';
   } else {
     para2 = para2raw; // fallback: keep as-is
   }
