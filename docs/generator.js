@@ -332,32 +332,51 @@ function buildBDNameBox(firstName, lastName, titles) {
  */
 function buildBDBody(data, finalSectPr, listNumId) {
   const numId = listNumId || '1';
+
+  // BD-specific heading: numId=0 disables the auto-numbering inherited from BD Heading1 style
+  const bdH1 = t => `<w:p><w:pPr><w:pStyle w:val="Heading1"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="0"/></w:numPr></w:pPr>${run(t)}</w:p>`;
+
   const pList = t => `<w:p><w:pPr><w:pStyle w:val="ListParagraph"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="${numId}"/></w:numPr></w:pPr>${run(t)}</w:p>`;
+
   const pDetail = (title, company) => {
     const r1 = title   ? run(title,               { color: '3756F5' })              : '';
     const r2 = company ? run(' \u2022 ' + company, { color: '56AF89', bold: true }) : '';
     return para('JobDetails', r1 + r2);
   };
+
+  // BD-specific JobDates uses Urbanist (not Barlow)
+  const bdPDates = t => para('JobDates', run(t, { font: 'Urbanist', sz: 22 }));
+
+  // Career timeline: one Normal para per entry, date black + role blue + <w:br/> + "at company"
+  // Urbanist 10pt (sz=20), spacing after=120
+  const rprBDNormal = `<w:rFonts w:ascii="Urbanist" w:hAnsi="Urbanist"/><w:sz w:val="20"/><w:szCs w:val="20"/>`;
+  const pTimeline = e => {
+    const runs = [];
+    if (e.dates) runs.push(`<w:r><w:rPr>${rprBDNormal}</w:rPr><w:t xml:space="preserve">${esc(e.dates + ': ')}</w:t></w:r>`);
+    if (e.role)  runs.push(`<w:r><w:rPr>${rprBDNormal}<w:color w:val="3756F5"/></w:rPr><w:t>${esc(e.role)}</w:t></w:r>`);
+    if (e.company) {
+      runs.push(`<w:r><w:rPr>${rprBDNormal}<w:color w:val="3756F5"/></w:rPr><w:br/></w:r>`);
+      runs.push(`<w:r><w:rPr>${rprBDNormal}</w:rPr><w:t>${esc('at ' + e.company)}</w:t></w:r>`);
+    }
+    return `<w:p><w:pPr><w:spacing w:after="120"/><w:rPr>${rprBDNormal}</w:rPr></w:pPr>${runs.join('')}</w:p>`;
+  };
+
   const out = [];
 
-  // Career timeline — no heading, paragraphs go directly after the bio paragraph
-  const tl = (data.careerTimeline||[]).filter(e => e.dates||e.role);
-  tl.forEach(e => {
-    const t = [e.dates, [e.role, e.company].filter(Boolean).join(' \u2013 ')].filter(Boolean).join(': ');
-    out.push(pNormal(run(t)));
-  });
+  // Career timeline — Normal paragraphs directly after bio (no heading before them)
+  (data.careerTimeline||[]).filter(e => e.dates||e.role).forEach(e => out.push(pTimeline(e)));
 
   // Training & certifications
   const certs = data.certifications||[];
   if (certs.length) {
-    out.push(h1('Training & certifications'));
+    out.push(bdH1('Training & certifications'));
     certs.forEach(c => out.push(pList(c.year ? `${c.year}: ${c.name}` : c.name||'')));
   }
 
   // Education — original order (not reversed)
   const edu = data.education||[];
   if (edu.length) {
-    out.push(h1('Education'));
+    out.push(bdH1('Education'));
     edu.forEach(e => {
       out.push(pList((e.years ? e.years+': ' : '') + (e.degree||'')));
       if (e.institution) out.push(pList(e.institution));
@@ -370,15 +389,15 @@ function buildBDBody(data, finalSectPr, listNumId) {
 
   function pushBDExps(exps) {
     exps.forEach(exp => {
-      if (exp.dates) out.push(pDates(exp.dates));
+      if (exp.dates) out.push(bdPDates(exp.dates));
       if (exp.title || exp.company) out.push(pDetail(exp.title||'', exp.company||''));
       (exp.description||[]).filter(Boolean).forEach(d => out.push(pDesc(d)));
       if (exp.tools) out.push(pDesc(exp.tools, true));  // no "Tools:" prefix in BD format
     });
   }
 
-  if (saExps.length)  { out.push(h1('Professional experiences with Agilos (Beyond Data)')); pushBDExps(saExps); }
-  if (preExps.length) { out.push(h1('Professional experiences before Agilos (Beyond Data)')); pushBDExps(preExps); }
+  if (saExps.length)  { out.push(bdH1('Professional experiences with Agilos (Beyond Data)')); pushBDExps(saExps); }
+  if (preExps.length) { out.push(bdH1('Professional experiences before Agilos (Beyond Data)')); pushBDExps(preExps); }
 
   out.push('<w:p/>');
   out.push(finalSectPr);
