@@ -6,7 +6,8 @@
 
 /* ── State ────────────────────────────────────────────────────────────── */
 const state = {
-  mode: 'manual',  // 'manual' | 'upload'
+  mode:     'manual',   // 'manual' | 'upload'
+  template: 'sa',       // 'sa' | 'bd'
   data: {
     firstName: '', lastName: '', birthDate: '',
     titles: ['', '', ''],
@@ -688,13 +689,16 @@ document.getElementById('btn-generate').addEventListener('click', async () => {
 
   try {
     syncFormToState();
-    const blob = await generateCV(state.data);
+    const blob = state.template === 'bd'
+      ? await generateBDCV(state.data)
+      : await generateCV(state.data);
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
-    const last  = (state.data.lastName  || 'CV').replace(/\s+/g, '');
-    const first = (state.data.firstName || '').replace(/\s+/g, '');
+    const last   = (state.data.lastName  || 'CV').replace(/\s+/g, '');
+    const first  = (state.data.firstName || '').replace(/\s+/g, '');
+    const suffix = state.template === 'bd' ? 'BeyondData' : 'SelectAdvisory';
     a.href     = url;
-    a.download = `${last}_${first}_SelectAdvisory.docx`;
+    a.download = `${last}_${first}_${suffix}.docx`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -775,6 +779,17 @@ document.getElementById('profile-select')?.addEventListener('change', async e =>
   } catch (err) {
     toast('Load error: ' + err.message, 'error');
   }
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+   TEMPLATE TOGGLE
+═══════════════════════════════════════════════════════════════════════ */
+document.querySelectorAll('.tmpl-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tmpl-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.template = btn.dataset.tmpl;
+  });
 });
 
 /* ═══════════════════════════════════════════════════════════════════════

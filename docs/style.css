@@ -182,6 +182,29 @@ body {
 }
 .btn-save-db:hover { background: rgba(255,255,255,.20); }
 .btn-save-db:disabled { opacity: .5; cursor: default; }
+.template-toggle {
+  display: flex;
+  gap: 4px;
+}
+.tmpl-btn {
+  flex: 1;
+  background: rgba(255,255,255,.08);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: rgba(255,255,255,.70);
+  padding: 6px 4px;
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.tmpl-btn:hover { background: rgba(255,255,255,.14); color: var(--white); }
+.tmpl-btn.active {
+  background: var(--orange);
+  color: var(--white);
+  border-color: var(--orange);
+}
 .btn-generate {
   width: 100%;
   background: var(--green);
