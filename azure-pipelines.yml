@@ -48,17 +48,22 @@ stages:
   displayName: Deploy to Azure
   dependsOn: Build
   jobs:
-  - deployment: Deploy
-    environment: production
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - task: AzureWebApp@1
-            inputs:
-              azureSubscription: 'AgilosLab-ServiceConnection'
-              appType: webAppLinux
-              appName: $(webAppName)
-              package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
-              runtimeStack: 'NODE|20-lts'
-            displayName: Deploy to Azure Web App
+  - job: Deploy
+    steps:
+    - download: current
+      artifact: drop
+
+    - script: |
+        curl -X POST \
+          "https://$(webAppName).scm.azurewebsites.net/api/zipdeploy" \
+          -u "$KUDU_USER:$KUDU_PASS" \
+          --data-binary @$(Pipeline.Workspace)/drop/$(Build.BuildId).zip \
+          -H "Content-Type: application/octet-stream" \
+          --fail \
+          --silent \
+          --show-error
+        echo "Deployment complete"
+      env:
+        KUDU_USER: $(KUDU_USER)
+        KUDU_PASS: $(KUDU_PASS)
+      displayName: Deploy via Kudu ZipDeploy
