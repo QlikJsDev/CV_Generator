@@ -310,6 +310,116 @@ async function parseWithClaude(file) {
   return parsed;
 }
 
+/* ── Translation tool schema ───────────────────────────────────────────── */
+const TRANSLATE_TOOL = {
+  name: 'translate_cv',
+  description: 'Translate the translatable CV fields into FR, EN and NL simultaneously.',
+  input_schema: {
+    type: 'object',
+    required: ['FR', 'EN', 'NL'],
+    properties: {
+      FR: { $ref: '#/$defs/LangData' },
+      EN: { $ref: '#/$defs/LangData' },
+      NL: { $ref: '#/$defs/LangData' },
+    },
+    $defs: {
+      LangData: {
+        type: 'object',
+        required: ['titles','bio','careerTimeline','knowHow','personalSkills','areasOfExpertise','technicalSkills','education','certifications','experiences'],
+        properties: {
+          titles:             { type: 'array', items: { type: 'string' }, description: 'Up to 3 job titles' },
+          bio:                { type: 'string' },
+          careerTimeline:     { type: 'array', items: { type: 'object', required: ['dates','role','company'], properties: { dates: { type: 'string' }, role: { type: 'string' }, company: { type: 'string' } } } },
+          knowHow:            { type: 'string' },
+          personalSkills:     { type: 'array', items: { type: 'string' } },
+          areasOfExpertise:   { type: 'array', items: { type: 'string' } },
+          technicalSkills:    { type: 'array', items: { type: 'string' } },
+          education:          { type: 'array', items: { type: 'object', required: ['years','degree','institution'], properties: { years: { type: 'string' }, degree: { type: 'string' }, institution: { type: 'string' } } } },
+          certifications:     { type: 'array', items: { type: 'object', required: ['year','name'], properties: { year: { type: 'string' }, name: { type: 'string' } } } },
+          experiences:        { type: 'array', items: { type: 'object', required: ['dates','title','company','description','tools','category'], properties: { dates: { type: 'string' }, title: { type: 'string' }, company: { type: 'string' }, description: { type: 'array', items: { type: 'string' } }, tools: { type: 'string' }, category: { type: 'string', enum: ['select_advisory','pre_advisory'] } } } },
+        },
+      },
+    },
+  },
+};
+
+const TRANSLATE_SYSTEM = `\
+You are a professional CV translator specialised in BI consulting profiles.
+Translate ONLY the text content into the target languages — keep all proper nouns (names, company names, client names, tool names, product names, certification names), dates, and periods EXACTLY as-is.
+Return all three languages (FR, EN, NL) in a single structured response.
+Maintain a professional, formal register consistent with consulting CVs.`;
+
+/**
+ * Translate all translatable CV fields into FR, EN and NL.
+ * Returns { FR: {...}, EN: {...}, NL: {...} } each shaped like state.data (translatable subset).
+ */
+async function translateCVAllLangs(cvData) {
+  const apiKey = (window.SA_CONFIG && window.SA_CONFIG.anthropicApiKey) || '';
+  if (!apiKey) throw new Error('API key not configured — check config.js.');
+
+  const payload = {
+    titles:           cvData.titles           || [],
+    bio:              cvData.bio              || '',
+    careerTimeline:   cvData.careerTimeline   || [],
+    knowHow:          cvData.knowHow          || '',
+    personalSkills:   cvData.personalSkills   || [],
+    areasOfExpertise: cvData.areasOfExpertise || [],
+    technicalSkills:  cvData.technicalSkills  || [],
+    education:        cvData.education        || [],
+    certifications:   cvData.certifications   || [],
+    experiences:      cvData.experiences      || [],
+  };
+
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 16000,
+      system: TRANSLATE_SYSTEM,
+      tools: [TRANSLATE_TOOL],
+      tool_choice: { type: 'tool', name: 'translate_cv' },
+      messages: [{
+        role: 'user',
+        content: `Translate the following CV data into French (FR), English (EN) and Dutch (NL):\n\n${JSON.stringify(payload, null, 2)}`,
+      }],
+    }),
+  });
+
+  if (!resp.ok) {
+    let msg = `Claude API error ${resp.status}`;
+    try { const e = await resp.json(); msg = e.error?.message || msg; } catch (_) {}
+    throw new Error(msg);
+  }
+
+  const data = await resp.json();
+  const toolBlock = (data.content || []).find(c => c.type === 'tool_use' && c.name === 'translate_cv');
+  if (!toolBlock) throw new Error('Claude did not return translation data.');
+
+  // Normalise each language variant
+  const result = {};
+  for (const lang of ['FR', 'EN', 'NL']) {
+    const d = toolBlock.input[lang] || {};
+    if (!Array.isArray(d.titles)) d.titles = ['', '', ''];
+    while (d.titles.length < 3) d.titles.push('');
+    // Preserve non-translatable fields from original
+    result[lang] = {
+      ...d,
+      firstName:  cvData.firstName,
+      lastName:   cvData.lastName,
+      birthDate:  cvData.birthDate,
+      languages:  cvData.languages,
+    };
+  }
+  return result;
+}
+
 global.parseWithClaude = parseWithClaude;
+global.translateCVAllLangs = translateCVAllLangs;
 
 })(window);

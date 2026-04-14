@@ -8,6 +8,7 @@
 const state = {
   mode:     'manual',   // 'manual' | 'upload'
   template: 'sa',       // 'sa' | 'bd'
+  lang:     'EN',       // 'FR' | 'EN' | 'NL' — active language for generate
   data: {
     firstName: '', lastName: '', birthDate: '',
     titles: ['', '', ''],
@@ -698,7 +699,7 @@ document.getElementById('btn-generate').addEventListener('click', async () => {
     const first  = (state.data.firstName || '').replace(/\s+/g, '');
     const suffix = state.template === 'bd' ? 'BeyondData' : 'SelectAdvisory';
     a.href     = url;
-    a.download = `${last}_${first}_${suffix}.docx`;
+    a.download = `${last}_${first}_${suffix}_${state.lang}.docx`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -767,17 +768,117 @@ document.getElementById('profile-select')?.addEventListener('change', async e =>
   if (!val) return;
   const [firstName, lastName] = val.split('|');
   try {
-    const data = await cvDB.loadProfile(firstName, lastName);
+    // Try to load the currently selected language version first
+    let data = null;
+    if (cvDB.isConfigured()) {
+      data = await cvDB.loadLang(firstName, lastName, state.lang);
+    }
+    // Fall back to base profile if no translation saved yet
+    if (!data) {
+      data = await cvDB.loadProfile(firstName, lastName);
+    }
     if (!data) { toast('Profile not found.', 'error'); return; }
     Object.assign(state.data, data);
     if (!Array.isArray(state.data.titles)) state.data.titles = ['', '', ''];
     while (state.data.titles.length < 3) state.data.titles.push('');
     renderAll();
-    // Switch to manual mode so form is visible
     document.querySelector('.mode-btn[data-mode="manual"]').click();
-    toast(`${lastName} ${firstName} loaded.`, 'success');
+    toast(`${lastName} ${firstName} loaded (${state.lang}).`, 'success');
+    await refreshLangStatus();
   } catch (err) {
     toast('Load error: ' + err.message, 'error');
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+   LANGUAGE TOGGLE
+═══════════════════════════════════════════════════════════════════════ */
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const lang = btn.dataset.lang;
+    if (lang === state.lang) return;
+
+    syncFormToState();
+
+    // Try to load saved translation from DB
+    if (cvDB.isConfigured() && state.data.firstName && state.data.lastName) {
+      try {
+        const translated = await cvDB.loadLang(state.data.firstName, state.data.lastName, lang);
+        if (translated) {
+          Object.assign(state.data, translated);
+          renderAll();
+          toast(`Loaded ${lang} version.`, 'success');
+        } else {
+          toast(`No ${lang} version saved yet — use "Translate & Save all" first.`, '');
+        }
+      } catch (err) {
+        console.warn('loadLang failed:', err.message);
+      }
+    }
+
+    state.lang = lang;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+    await refreshLangStatus();
+  });
+});
+
+async function refreshLangStatus() {
+  const statusEl = document.getElementById('lang-status');
+  if (!statusEl) return;
+  if (!cvDB.isConfigured() || !state.data.firstName || !state.data.lastName) {
+    statusEl.textContent = '';
+    return;
+  }
+  try {
+    const saved = await cvDB.listLangs(state.data.firstName, state.data.lastName);
+    document.querySelectorAll('.lang-btn').forEach(b => {
+      b.classList.toggle('saved', saved.includes(b.dataset.lang));
+    });
+    statusEl.textContent = saved.length ? `Saved: ${saved.join(', ')}` : 'No translations saved';
+  } catch (_) {
+    statusEl.textContent = '';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   TRANSLATE & SAVE ALL
+═══════════════════════════════════════════════════════════════════════ */
+document.getElementById('btn-translate').addEventListener('click', async () => {
+  syncFormToState();
+  if (!state.data.firstName || !state.data.lastName) {
+    toast('Fill in first name and last name before translating.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btn-translate');
+  btn.disabled = true;
+  btn.textContent = '🌐 Translating…';
+
+  try {
+    const translations = await translateCVAllLangs(state.data);
+
+    // Save base profile first (needed for FK)
+    await saveProfileToDB(state.data);
+
+    // Save each language
+    for (const lang of ['FR', 'EN', 'NL']) {
+      await cvDB.upsertLang(translations[lang], lang);
+    }
+
+    toast('✓ FR, EN and NL versions saved!', 'success');
+    await refreshLangStatus();
+
+    // Load the currently selected language into the form
+    const current = translations[state.lang];
+    if (current) {
+      Object.assign(state.data, current);
+      renderAll();
+    }
+  } catch (err) {
+    toast('Translation error: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🌐 Translate & Save all';
   }
 });
 

@@ -168,6 +168,69 @@ body {
   flex-direction: column;
   gap: 8px;
 }
+
+/* ── Language toggle ───────────────────────────────────────────────────── */
+.lang-toggle-wrap {
+  border-top: 1px solid rgba(255,255,255,.10);
+  padding-top: 10px;
+}
+.lang-toggle {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.lang-btn {
+  flex: 1;
+  background: rgba(255,255,255,.08);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: rgba(255,255,255,.60);
+  padding: 6px 4px;
+  font-size: .82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  letter-spacing: .04em;
+}
+.lang-btn:hover { background: rgba(255,255,255,.14); color: var(--white); }
+.lang-btn.active {
+  background: var(--blue);
+  color: var(--white);
+  border-color: var(--blue);
+}
+.lang-btn.saved {
+  position: relative;
+}
+.lang-btn.saved::after {
+  content: '✓';
+  font-size: .6rem;
+  position: absolute;
+  top: 2px;
+  right: 3px;
+}
+.lang-status {
+  font-size: .7rem;
+  color: rgba(255,255,255,.45);
+  min-height: 14px;
+  margin-bottom: 2px;
+}
+
+/* ── Translate button ──────────────────────────────────────────────────── */
+.btn-translate {
+  width: 100%;
+  background: rgba(51,164,221,.20);
+  color: var(--blue);
+  border: 1px solid rgba(51,164,221,.40);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: .88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.btn-translate:hover { background: rgba(51,164,221,.35); color: var(--white); }
+.btn-translate:disabled { opacity: .5; cursor: default; }
+
 .btn-save-db {
   width: 100%;
   background: rgba(255,255,255,.10);

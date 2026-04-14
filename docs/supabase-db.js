@@ -61,7 +61,7 @@
     return !!(cfg.supabaseUrl && cfg.supabaseAnonKey);
   }
 
-  /** Map flat JS state.data → DB row columns */
+  /** Map flat JS state.data → DB row columns (cv_profiles — full for backward compat) */
   function toRow(d) {
     return {
       first_name:         d.firstName           || '',
@@ -79,6 +79,39 @@
       languages:          d.languages           || [],
       experiences:        d.experiences         || [],
       updated_at:         new Date().toISOString(),
+    };
+  }
+
+  /** Map flat JS state.data → cv_profile_langs row (translatable fields only) */
+  function toLangRow(d) {
+    return {
+      titles:             d.titles              || [],
+      bio:                d.bio                 || null,
+      career_timeline:    d.careerTimeline      || [],
+      know_how:           d.knowHow             || null,
+      personal_skills:    d.personalSkills      || [],
+      areas_of_expertise: d.areasOfExpertise    || [],
+      technical_skills:   d.technicalSkills     || [],
+      education:          d.education           || [],
+      certifications:     d.certifications      || [],
+      experiences:        d.experiences         || [],
+      updated_at:         new Date().toISOString(),
+    };
+  }
+
+  /** Map cv_profile_langs row → translatable fields of state.data */
+  function fromLangRow(row) {
+    return {
+      titles:            row.titles              || ['', '', ''],
+      bio:               row.bio                 || '',
+      careerTimeline:    row.career_timeline     || [],
+      knowHow:           row.know_how            || '',
+      personalSkills:    row.personal_skills     || [],
+      areasOfExpertise:  row.areas_of_expertise  || [],
+      technicalSkills:   row.technical_skills    || [],
+      education:         row.education           || [],
+      certifications:    row.certifications      || [],
+      experiences:       row.experiences         || [],
     };
   }
 
@@ -130,18 +163,88 @@
 
   /**
    * Insert or update a profile.
-   * Key = (first_name, last_name). Returns true on success, false if not configured.
+   * Key = (first_name, last_name). Returns the profile uuid on success.
    */
   async function upsertProfile(cvData) {
     const sb = getClient();
     if (!sb) return false;
     if (!cvData.firstName || !cvData.lastName) return false;
-    const { error } = await sb
+    const { data, error } = await sb
       .from('cv_profiles')
-      .upsert(toRow(cvData), { onConflict: 'first_name,last_name' });
+      .upsert(toRow(cvData), { onConflict: 'first_name,last_name' })
+      .select('id')
+      .single();
+    if (error) throw error;
+    return data?.id || true;
+  }
+
+  /**
+   * Get the uuid of a profile by name (null if not found).
+   */
+  async function getProfileId(firstName, lastName) {
+    const sb = getClient();
+    if (!sb) return null;
+    const { data, error } = await sb
+      .from('cv_profiles')
+      .select('id')
+      .eq('first_name', firstName)
+      .eq('last_name', lastName)
+      .single();
+    if (error) return null;
+    return data?.id || null;
+  }
+
+  /**
+   * Save a translated version of a profile for a given language.
+   * lang: 'FR' | 'EN' | 'NL'
+   */
+  async function upsertLang(cvData, lang) {
+    const sb = getClient();
+    if (!sb) return false;
+    const profileId = await getProfileId(cvData.firstName, cvData.lastName);
+    if (!profileId) return false;
+    const { error } = await sb
+      .from('cv_profile_langs')
+      .upsert({ profile_id: profileId, lang, ...toLangRow(cvData) }, { onConflict: 'profile_id,lang' });
     if (error) throw error;
     return true;
   }
 
-  global.cvDB = { isConfigured, listProfiles, loadProfile, upsertProfile };
+  /**
+   * Load a translated version of a profile for a given language.
+   * Returns an object with translatable fields, or null if not found.
+   */
+  async function loadLang(firstName, lastName, lang) {
+    const sb = getClient();
+    if (!sb) return null;
+    const profileId = await getProfileId(firstName, lastName);
+    if (!profileId) return null;
+    const { data, error } = await sb
+      .from('cv_profile_langs')
+      .select('*')
+      .eq('profile_id', profileId)
+      .eq('lang', lang)
+      .single();
+    if (error) return null;
+    return data ? fromLangRow(data) : null;
+  }
+
+  /**
+   * List available languages for a profile.
+   * Returns e.g. ['EN', 'FR', 'NL']
+   */
+  async function listLangs(firstName, lastName) {
+    const sb = getClient();
+    if (!sb) return [];
+    const profileId = await getProfileId(firstName, lastName);
+    if (!profileId) return [];
+    const { data, error } = await sb
+      .from('cv_profile_langs')
+      .select('lang')
+      .eq('profile_id', profileId);
+    if (error) return [];
+    return (data || []).map(r => r.lang);
+  }
+
+  global.cvDB = { isConfigured, listProfiles, loadProfile, upsertProfile, upsertLang, loadLang, listLangs };
 })(window);

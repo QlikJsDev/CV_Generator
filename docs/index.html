@@ -34,6 +34,16 @@
       <nav class="sidebar-nav" id="sidebar-nav"></nav>
 
       <div class="sidebar-footer">
+        <div class="lang-toggle-wrap">
+          <label class="profile-label">CV language</label>
+          <div class="lang-toggle">
+            <button class="lang-btn" data-lang="FR">FR</button>
+            <button class="lang-btn active" data-lang="EN">EN</button>
+            <button class="lang-btn" data-lang="NL">NL</button>
+          </div>
+          <div class="lang-status" id="lang-status"></div>
+        </div>
+        <button class="btn-translate" id="btn-translate" title="Translate to FR, EN and NL with Claude AI">🌐 Translate &amp; Save all</button>
         <button class="btn-save-db" id="btn-save-db" title="Save profile to database">💾 Save profile</button>
         <div class="template-toggle">
           <button class="tmpl-btn active" data-tmpl="sa">Select Advisory</button>
