@@ -690,16 +690,26 @@ document.getElementById('btn-generate').addEventListener('click', async () => {
 
   try {
     syncFormToState();
-    const blob = state.template === 'bd'
-      ? await generateBDCV(state.data)
-      : await generateCV(state.data);
+    let blob, ext, suffix;
+    if (state.template === 'ep') {
+      blob   = generateEuropassCV(state.data);
+      ext    = 'html';
+      suffix = 'Europass';
+    } else if (state.template === 'bd') {
+      blob   = await generateBDCV(state.data);
+      ext    = 'docx';
+      suffix = 'BeyondData';
+    } else {
+      blob   = await generateCV(state.data);
+      ext    = 'docx';
+      suffix = 'SelectAdvisory';
+    }
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     const last   = (state.data.lastName  || 'CV').replace(/\s+/g, '');
     const first  = (state.data.firstName || '').replace(/\s+/g, '');
-    const suffix = state.template === 'bd' ? 'BeyondData' : 'SelectAdvisory';
     a.href     = url;
-    a.download = `${last}_${first}_${suffix}_${state.lang}.docx`;
+    a.download = `${last}_${first}_${suffix}_${state.lang}.${ext}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

@@ -247,26 +247,34 @@ body {
 .btn-save-db:disabled { opacity: .5; cursor: default; }
 .template-toggle {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
 }
 .tmpl-btn {
   flex: 1;
+  min-width: 0;
   background: rgba(255,255,255,.08);
   border: 1px solid transparent;
   border-radius: 6px;
   color: rgba(255,255,255,.70);
   padding: 6px 4px;
-  font-size: .78rem;
+  font-size: .72rem;
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .tmpl-btn:hover { background: rgba(255,255,255,.14); color: var(--white); }
 .tmpl-btn.active {
   background: var(--orange);
   color: var(--white);
   border-color: var(--orange);
+}
+.tmpl-btn[data-tmpl="ep"].active {
+  background: #003399;
+  border-color: #003399;
 }
 .btn-generate {
   width: 100%;
