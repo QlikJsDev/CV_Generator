@@ -778,16 +778,16 @@ document.getElementById('profile-select')?.addEventListener('change', async e =>
   if (!val) return;
   const [firstName, lastName] = val.split('|');
   try {
-    // Try to load the currently selected language version first
-    let data = null;
+    // Always load base profile first (contains firstName, lastName, birthDate, languages)
+    const base = await cvDB.loadProfile(firstName, lastName);
+    if (!base) { toast('Profile not found.', 'error'); return; }
+
+    // Overlay with translation if one exists for the active language
+    let data = base;
     if (cvDB.isConfigured()) {
-      data = await cvDB.loadLang(firstName, lastName, state.lang);
+      const langData = await cvDB.loadLang(firstName, lastName, state.lang);
+      if (langData) data = { ...base, ...langData };
     }
-    // Fall back to base profile if no translation saved yet
-    if (!data) {
-      data = await cvDB.loadProfile(firstName, lastName);
-    }
-    if (!data) { toast('Profile not found.', 'error'); return; }
     Object.assign(state.data, data);
     if (!Array.isArray(state.data.titles)) state.data.titles = ['', '', ''];
     while (state.data.titles.length < 3) state.data.titles.push('');
