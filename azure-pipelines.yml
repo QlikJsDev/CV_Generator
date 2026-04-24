@@ -1,0 +1,90 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pr: none
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  webAppName:    'CVGenerator-Agilos'
+  resourceGroup: 'Agilos-AI-Portfolio'
+  # AZURE_SERVICE_CONNECTION  → à définir dans Azure DevOps > Project Settings > Service Connections
+  # ANTHROPIC_API_KEY         → à définir dans Azure DevOps > Pipelines > Variables (secret)
+  # SUPABASE_URL              → à définir dans Azure DevOps > Pipelines > Variables (secret)
+  # SUPABASE_ANON_KEY         → à définir dans Azure DevOps > Pipelines > Variables (secret)
+
+stages:
+  - stage: Deploy
+    displayName: 'Build & Deploy'
+    jobs:
+      - job: DeployJob
+        displayName: 'Package and deploy to Azure Web App'
+        steps:
+
+          # ── 1. Checkout ─────────────────────────────────
+          - checkout: self
+            displayName: 'Checkout repository'
+
+          # ── 2. Inject secrets into config.js ────────────
+          - script: |
+              mkdir -p docs
+              cat > docs/config.js <<EOF
+              window.SA_CONFIG = {
+                anthropicApiKey: '$(ANTHROPIC_API_KEY)',
+                supabaseUrl:     '$(SUPABASE_URL)',
+                supabaseAnonKey: '$(SUPABASE_ANON_KEY)',
+              };
+              EOF
+              echo "config.js generated"
+            displayName: 'Inject secrets into config.js'
+
+          # ── 3. Package (docs/ → public/, exclude artifacts) ──
+          - task: UsePythonVersion@0
+            displayName: 'Use Python 3.x'
+            inputs:
+              versionSpec: '3.x'
+
+          - script: |
+              python -c "
+              import zipfile, os
+
+              src = os.getcwd()
+              dst = '/tmp/cvgenerator-deploy.zip'
+              exclude_dirs = {'temp', 'test', '.git', '.github', 'node_modules'}
+              exclude_ext  = {'.docx', '.pdf'}
+
+              with zipfile.ZipFile(dst, 'w', zipfile.ZIP_DEFLATED) as zf:
+                  for root, dirs, files in os.walk(src):
+                      dirs[:] = [d for d in dirs if d not in exclude_dirs]
+                      rel_root = os.path.relpath(root, src)
+                      for file in files:
+                          fp = os.path.join(root, file)
+                          if os.path.splitext(file)[1].lower() in exclude_ext:
+                              continue
+                          arcname = os.path.relpath(fp, src)
+                          if rel_root == 'docs' or rel_root.startswith('docs' + os.sep):
+                              rest = os.path.relpath(fp, os.path.join(src, 'docs'))
+                              arcname = os.path.join('public', rest)
+                          elif rel_root == 'public':
+                              docs_equiv = os.path.join(src, 'docs', file)
+                              if os.path.exists(docs_equiv):
+                                  continue
+                          zf.write(fp, arcname)
+
+              size_kb = os.path.getsize(dst) / 1024
+              print(f'Package created: {dst} ({size_kb:.1f} KB)')
+              "
+            displayName: 'Package application (ZipDeploy)'
+
+          # ── 4. Deploy to Azure Web App ───────────────────
+          - task: AzureWebApp@1
+            displayName: 'Deploy to Azure Web App'
+            inputs:
+              azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
+              appType: webApp
+              appName:  '$(webAppName)'
+              package:  '/tmp/cvgenerator-deploy.zip'
+              deploymentMethod: zipDeploy
