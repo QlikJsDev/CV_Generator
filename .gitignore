@@ -6,3 +6,7 @@ docs/config.js
 # original CV files with special chars in names
 JFD - *.docx
 MGE - *.docx
+
+# dev artifacts
+temp/
+test_output.docx

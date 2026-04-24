@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Europass CV – Maxime Gerard</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Open Sans', Arial, sans-serif; font-size: 10pt; color: #222; background: #f2f2f2; }
+    .ep-page { background: #fff; max-width: 210mm; margin: 0 auto; padding: 0; }
+
+    /* ── Header ── */
+    .ep-header { background: #003399; color: #fff; padding: 24px 32px; display: flex; align-items: flex-start; gap: 24px; }
+    .ep-header-flag { flex-shrink: 0; margin-top: 4px; }
+    .ep-header-name { flex: 1; }
+    .ep-header-name h1 { font-size: 22pt; font-weight: 700; letter-spacing: .5px; margin-bottom: 6px; }
+    .ep-title-tag { display: inline-block; background: rgba(255,255,255,.18); border-radius: 4px; padding: 2px 8px; font-size: 9pt; margin: 2px 3px 2px 0; }
+    .ep-header-meta { margin-top: 10px; font-size: 8.5pt; opacity: .85; }
+    .ep-header-meta span { display: inline-block; margin-right: 16px; }
+
+    /* ── Sections ── */
+    .ep-section { padding: 18px 32px; border-bottom: 1px solid #e8e8e8; }
+    .ep-section:last-child { border-bottom: none; }
+    .ep-section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid #003399; }
+    .ep-section-header h2 { color: #003399; font-size: 11pt; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; }
+
+    /* ── Entry (work/edu) ── */
+    .ep-entry { display: flex; gap: 20px; margin-bottom: 14px; }
+    .ep-entry:last-child { margin-bottom: 0; }
+    .ep-entry-left { width: 110px; flex-shrink: 0; font-size: 8.5pt; color: #555; font-weight: 600; padding-top: 1px; }
+    .ep-entry-right { flex: 1; }
+    .ep-entry-right strong { font-size: 10pt; color: #111; }
+    .ep-org { font-size: 9pt; color: #003399; font-weight: 600; }
+    .ep-entry-right ul { margin: 6px 0 0 16px; }
+    .ep-entry-right li { margin-bottom: 3px; font-size: 9pt; }
+    .ep-tools { font-size: 8.5pt; color: #555; margin-top: 5px; }
+
+    /* ── Bio / Timeline ── */
+    .ep-bio { font-size: 9.5pt; line-height: 1.6; color: #333; }
+    .ep-timeline { margin: 10px 0 0 16px; }
+    .ep-timeline li { font-size: 9pt; margin-bottom: 4px; color: #333; }
+
+    /* ── Certifications ── */
+    .ep-cert-list { margin-left: 16px; }
+    .ep-cert-list li { font-size: 9pt; margin-bottom: 4px; }
+
+    /* ── Languages ── */
+    .ep-lang-table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 8px; }
+    .ep-lang-table th { background: #003399; color: #fff; padding: 5px 8px; text-align: center; font-weight: 600; font-size: 8pt; }
+    .ep-lang-table td { padding: 5px 8px; text-align: center; border-bottom: 1px solid #eee; }
+    .ep-lang-name { text-align: left !important; font-weight: 600; }
+    .ep-lang-sub th { background: #1a4daa; font-size: 7.5pt; }
+    .ep-stars { text-align: left !important; }
+    .ep-cefr-note { font-size: 7.5pt; color: #777; margin-top: 4px; }
+
+    /* ── Skills ── */
+    .ep-skills-list { margin-top: 4px; }
+    .ep-skill-tag { display: inline-block; background: #eef2fa; border: 1px solid #c5d3ef; border-radius: 3px; padding: 2px 7px; font-size: 8.5pt; margin: 2px 3px 2px 0; color: #003399; }
+
+    /* ── Print ── */
+    @media print {
+      body { background: #fff; }
+      .ep-page { max-width: 100%; margin: 0; box-shadow: none; }
+      @page { margin: 0; size: A4; }
+    }
+    @media screen { .ep-page { box-shadow: 0 2px 24px rgba(0,0,0,.15); margin: 20px auto; } }
+  </style>
+</head>
+<body>
+<div class="ep-page">
+  <div class="ep-header">
+    <div class="ep-header-flag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 810 540" width="48" height="32">
+  <rect width="810" height="540" fill="#003399"/>
+  <g fill="#FFCC00">
+    <polygon points="405,90 411,109 431,109 415,121 421,140 405,128 389,140 395,121 379,109 399,109" transform="rotate(0,405,270)"/>
+    <polygon points="405,90 411,109 431,109 415,121 421,140 405,128 389,140 395,121 379,109 399,109" transform="rotate(30,405,270)"/>
+    <polygon points="405,90 411,109 431,109 415,121 421,140 405,128 389,140 395,121 379,109 399,109" transform="rotate(60,405,270)"/>
+    <polygon points="405,90 411,109 431,109 415,121 421,140 405,128 389,140 395,121 379,109 399,109" transform="rotate(90,405,270)"/>
+    <polygon points="405,90 411,109 431,109 415,121 421,140 405,128 389,140 395,121 379,109 399,109" transform="rotate(120,405,270)"/>
+    <polygon points="405,90 411,109 431,109 415,121 421,140 405,128 389,140 395,121 379,109 399,109" transform="rotate(150,405,270)"/>
+    <polygon points="405,90 411,109 431,109 415,121 421,140 405,128 389,140 395,121 379,109 399,109" transform="rotate(180,405,270)"/>
+    <polygon points="405,90 411,109 431,109 415,121 421,140 405,128 389,140 395,121 379,109 399,109" transform="rotate(210,405,270)"/>
+    <polygon points="405,90 411,109 431,109 415,121 421,140 405,128 389,140 395,121 379,109 399,109" transform="rotate(240,405,270)"/>
+    <polygon points="405,90 411,109 431,109 415,121 421,140 405,128 389,140 395,121 379,109 399,109" transform="rotate(270,405,270)"/>
+    <polygon points="405,90 411,109 431,109 415,121 421,140 405,128 389,140 395,121 379,109 399,109" transform="rotate(300,405,270)"/>
+    <polygon points="405,90 411,109 431,109 415,121 421,140 405,128 389,140 395,121 379,109 399,109" transform="rotate(330,405,270)"/>
+  </g>
+</svg></div>
+    <div class="ep-header-name">
+      <h1>Maxime Gerard</h1>
+      <span class="ep-title-tag">Senior Data Scientist</span><span class="ep-title-tag">Senior Data Insight Consultant</span>
+      <div class="ep-header-meta">
+        
+      </div>
+    </div>
+  </div>
+
+  
+    <section class="ep-section">
+      <div class="ep-section-header"><span class="ep-section-icon"></span><h2>About me</h2></div>
+      <p class="ep-bio">Maxime is a Senior Data Insight Consultant / Data Scientist with a solid background in mechanical and biomedical engineering, specializing in machine learning and image processing. He has demonstrated his ability to solve complex technical problems through expertise in tools like Qlik, Alteryx, Snowflake, Qlik Cloud, and QCDI, with a focus on data modeling, visualization, and security. His experience spans several industries, and he values communication between IT developers and business users to ensure project success. Maxime is dedicated to creating user-friendly interfaces and teaching clients how to efficiently use their BI tools post-development.</p>
+      <ul class="ep-timeline"><li>February 2015 – Ongoing: Data Insight Consultant – Agilos (Beyond Data Group)</li></ul>
+    </section>
+  
+    <section class="ep-section">
+      <div class="ep-section-header"><span class="ep-section-icon"></span><h2>Work experience</h2></div>
+      <div class="ep-entry">
+      <div class="ep-entry-left">Mai 2025 – Today</div>
+      <div class="ep-entry-right">
+        <strong>Qlik Cloud Migration Assessor</strong>
+        <br><span class="ep-org">Select Advisory / Agilos</span>
+        <ul><li>Maxime conducts Qlik Cloud assessments, analyzing clients' Qlik Sense Client-Managed environments to evaluate their migration potential to the cloud. This includes assessing architecture, data models, and security to ensure a seamless and efficient transition to Qlik Cloud.</li></ul>
+        <p class="ep-tools"><strong>Tools:</strong> Qlik Sense / Qlik Cloud</p>
+      </div>
+    </div><div class="ep-entry">
+      <div class="ep-entry-left">Jan 2016 – Current</div>
+      <div class="ep-entry-right">
+        <strong>Qlik Official Trainer</strong>
+        <br><span class="ep-org">Agilos</span>
+        <ul><li>Maxime is an official Qlik trainer with over 10 years of experience in Data Visualization, Data Modeling and NPrinting. Maxime has trained more than 2000 professionals across various industries, helping them master Qlik solutions to turn data into actionable insights. Passionate about sharing knowledge, he provides hands-on, practical training tailored to business needs. These trainings include also workshops &amp; coaching sessions for Mashup Development using standards such as HTML, CSS and JavaScript, as well as Web API and XML Based connections.</li></ul>
+        <p class="ep-tools"><strong>Tools:</strong> Qlik Sense / QlikView / NPrinting</p>
+      </div>
+    </div><div class="ep-entry">
+      <div class="ep-entry-left">June 2025 – Dec 2025</div>
+      <div class="ep-entry-right">
+        <strong>BI Consultant</strong>
+        <br><span class="ep-org">Stuv</span>
+        <ul><li>Maxime migrated a Qlik Sense app from an on-premises SAP connection to Qlik Cloud connected to SAP S/4HANA Cloud. To do so, he identified all field correspondences between both systems and learned how to call SAP HANA APIs to retrieve the correct data. Furthermore, he implemented an incremental load to efficiently manage large data volumes via APIs.</li></ul>
+        <p class="ep-tools"><strong>Tools:</strong> Qlik Cloud / SAP HANA</p>
+      </div>
+    </div><div class="ep-entry">
+      <div class="ep-entry-left">Mai 2025 – Current</div>
+      <div class="ep-entry-right">
+        <strong>BI Consultant</strong>
+        <br><span class="ep-org">Red Cross Belgium</span>
+        <ul><li>Maxime developed an application for Red Cross Belgium, enabling them to manage their budgeting process in a more efficient, robust, and consolidated way. Vizlib Writeback was used in Qlik Sense to allow each provincial manager and financial controller to enter their budget as well as their investments. Section Access managed security, ensuring that each user could only access their own budget lines. A process was also implemented to manage different budget versions, compare them with one another, and keep a history of changes. Budgets could therefore be compared in real time with actuals.</li></ul>
+        <p class="ep-tools"><strong>Tools:</strong> Qlik Sense / Vizlib Writeback</p>
+      </div>
+    </div><div class="ep-entry">
+      <div class="ep-entry-left">Jan 2025 – Current</div>
+      <div class="ep-entry-right">
+        <strong>BI Consultant</strong>
+        <br><span class="ep-org">BMedical Systems</span>
+        <ul><li>B Medical Systems, based in Luxembourg, is a global leader in medical refrigeration solutions. They specialize in the storage and transport of vaccines, blood products, and laboratory samples, ensuring safety and reliability. With over 40 years of innovation, they serve healthcare institutions in more than 130 countries. B Medical was looking for an experienced Qlik developer to maintain existing applications and develop new projects in collaboration with the Finance, After-Sales, and Supply Chain departments.</li></ul>
+        <p class="ep-tools"><strong>Tools:</strong> Qlik Sense / NPrinting</p>
+      </div>
+    </div><div class="ep-entry">
+      <div class="ep-entry-left">May 2024</div>
+      <div class="ep-entry-right">
+        <strong>BI Consultant</strong>
+        <br><span class="ep-org">OVAM</span>
+        <ul><li>OVAM was investigating for a data integration tool to be used in the organization. Maxime worked on a proof of concept to demonstrate the added value of Qlik Cloud Data Integration for replication of Oracle and DB2 data to PostgreSQL target. A Qlik Cloud and a Power BI dashboard was also created based on replicated data.</li></ul>
+        <p class="ep-tools"><strong>Tools:</strong> QCDI / Qlik Cloud / Power BI</p>
+      </div>
+    </div><div class="ep-entry">
+      <div class="ep-entry-left">April 2024</div>
+      <div class="ep-entry-right">
+        <strong>BI Consultant</strong>
+        <br><span class="ep-org">Toyota</span>
+        <ul><li>Toyota was investigating to find the best tool for data integration. Maxime worked on a proof of concept to demonstrate the added value of Qlik Cloud Data Integration for replication of Oracle, MSSQL and DB2 data to Snowflake target.</li></ul>
+        <p class="ep-tools"><strong>Tools:</strong> QCDI / Snowflake</p>
+      </div>
+    </div><div class="ep-entry">
+      <div class="ep-entry-left">January 2023 – 2025</div>
+      <div class="ep-entry-right">
+        <strong>BI Consultant</strong>
+        <br><span class="ep-org">Inovyn</span>
+        <ul><li>Inovyn is a worldwide leader in chemical industry. The finance team was looking for a solution to improve their fixed costs. They needed a tool allowing them to retrieve their actuals from SAP, input their budgets and forecasts, and apply a large set of rules to categorize the costs, apply exchange rates, version the data. Solution included QDI, Snowflake and Smartsheet.</li></ul>
+        <p class="ep-tools"><strong>Tools:</strong> Qlik Sense / QDI / Snowflake / Smartsheet</p>
+      </div>
+    </div><div class="ep-entry">
+      <div class="ep-entry-left">May 2022 – October 2022</div>
+      <div class="ep-entry-right">
+        <strong>BI Consultant</strong>
+        <br><span class="ep-org">KBC</span>
+        <ul><li>KBC needed to generate automatic reports about legal files data stored in SharePoint and in a .Net application. Maxime has built a data model based on Qlik SharePoint Web Connector, XML Data sources and Oracle DB and reproduced Business Objects reports in NPrinting.</li></ul>
+        <p class="ep-tools"><strong>Tools:</strong> Qlik Sense / SharePoint / NPrinting</p>
+      </div>
+    </div><div class="ep-entry">
+      <div class="ep-entry-left">January 2021 – November 2021</div>
+      <div class="ep-entry-right">
+        <strong>BI Consultant</strong>
+        <br><span class="ep-org">National Bank of Belgium</span>
+        <ul><li>National Bank of Belgium is dealing with thousands of contracts every day. They needed a tool to monitor the number of errors in contracts and the amount of money related to these errors. Maxime was in charge to build a Qlik Sense application calculating more than hundred rules and displaying the result in a user-friendly reporting application. The real challenge here was the volume of data (over 1 Terabyte of Data).</li></ul>
+        <p class="ep-tools"><strong>Tools:</strong> Qlik Sense</p>
+      </div>
+    </div><div class="ep-entry">
+      <div class="ep-entry-left">January 2021 – 2024</div>
+      <div class="ep-entry-right">
+        <strong>BI Consultant</strong>
+        <br><span class="ep-org">FN Herstal</span>
+        <ul><li>FN Herstal is one of the bigger weapons manufacturers. They have different production lines and want to be able to answer questions like which parts are defective, how long a machine is stopped, for which reason, or what is the discarded part ratio. As the collected data concerns machine status information every minute, this project includes high data volumes with Qlik link tables having over 500 million rows.</li></ul>
+        <p class="ep-tools"><strong>Tools:</strong> Qlik Sense / NPrinting</p>
+      </div>
+    </div><div class="ep-entry">
+      <div class="ep-entry-left">December 2018 – December 2022</div>
+      <div class="ep-entry-right">
+        <strong>BI Consultant</strong>
+        <br><span class="ep-org">Emakina</span>
+        <ul><li>Emakina is a Digital Marketing Company present in 6 countries. They decided to work with a new version of Navision and had to migrate the full set of their applications. Maxime had to make retro-engineering on an existing environment, analyze Web APIs and XML Data sources to finally consolidate data from old and new Navision system.</li></ul>
+        <p class="ep-tools"><strong>Tools:</strong> QlikView / Navision / WorkFront</p>
+      </div>
+    </div><div class="ep-entry">
+      <div class="ep-entry-left">April 2016 – Current</div>
+      <div class="ep-entry-right">
+        <strong>BI Consultant</strong>
+        <br><span class="ep-org">European Commission</span>
+        <ul><li>Maxime delivered QlikView and Qlik Sense trainings and worked on projects for different DGs such as DG NEAR, HR, SANTE, HOME, and developed a Qlik Sense Web Mashup for DG BUDG: the first version of the Financial Transparency System.</li></ul>
+        <p class="ep-tools"><strong>Tools:</strong> Qlik Sense / QlikView / NPrinting / JavaScript / CSS</p>
+      </div>
+    </div><div class="ep-entry">
+      <div class="ep-entry-left">May 2015 – October 2015</div>
+      <div class="ep-entry-right">
+        <strong>BI Consultant</strong>
+        <br><span class="ep-org">MRBC (Ministère de la Région Bruxelles Capitale)</span>
+        <ul><li>MRBC wanted to go further by integrating a simulation tool in their current HR application. As a consultant, Maxime was asked to make a technico-functional pre-study in order to investigate the possibility and feasibility for the integration of such a tool.</li></ul>
+        <p class="ep-tools"><strong>Tools:</strong> QlikView</p>
+      </div>
+    </div>
+    </section>
+  
+    <section class="ep-section">
+      <div class="ep-section-header"><span class="ep-section-icon"></span><h2>Education and training</h2></div>
+      <div class="ep-entry">
+    <div class="ep-entry-left">2012 - 2014</div>
+    <div class="ep-entry-right">
+      <strong>Master in Civil Engineering</strong>
+      <br><span class="ep-org">UCL/Louvain-la-Neuve</span>
+    </div>
+  </div><div class="ep-entry">
+    <div class="ep-entry-left">2009 - 2012</div>
+    <div class="ep-entry-right">
+      <strong>Bachelor in Civil Engineering</strong>
+      <br><span class="ep-org">UCL/Louvain-la-Neuve</span>
+    </div>
+  </div>
+    </section>
+  
+    <section class="ep-section">
+      <div class="ep-section-header"><span class="ep-section-icon"></span><h2>Certifications</h2></div>
+      <ul class="ep-cert-list"><li><strong>2022</strong> — Qlik Sense Business Analyst</li><li><strong>2022</strong> — Qlik Sense Data Architect</li><li><strong>2021</strong> — PCAP - Certified Associate in Python Programming</li><li><strong>2018</strong> — Qlik Official Trainer</li><li><strong>2016</strong> — QlikView Data Architect</li></ul>
+    </section>
+  
+    <section class="ep-section">
+      <div class="ep-section-header"><span class="ep-section-icon"></span><h2>Language skills</h2></div>
+      <table class="ep-lang-table">
+        <thead>
+          <tr>
+            <th>Language</th>
+            <th colspan="2">Understanding</th>
+            <th colspan="2">Speaking</th>
+            <th>Writing</th>
+            <th>Level</th>
+          </tr>
+          <tr class="ep-lang-sub">
+            <th></th><th>Listening</th><th>Reading</th>
+            <th>Production</th><th>Interaction</th><th></th><th></th>
+          </tr>
+        </thead>
+        <tbody><tr>
+      <td class="ep-lang-name">French</td>
+      <td>C2</td><td>C2</td><td>C2</td><td>C2</td><td>C2</td>
+      <td class="ep-stars"><span style="color:#003399;font-size:14px;">&#9733;</span><span style="color:#003399;font-size:14px;">&#9733;</span><span style="color:#003399;font-size:14px;">&#9733;</span><span style="color:#003399;font-size:14px;">&#9733;</span><span style="color:#003399;font-size:14px;">&#9733;</span></td>
+    </tr><tr>
+      <td class="ep-lang-name">English</td>
+      <td>B2</td><td>B2</td><td>B2</td><td>B2</td><td>B2</td>
+      <td class="ep-stars"><span style="color:#003399;font-size:14px;">&#9733;</span><span style="color:#003399;font-size:14px;">&#9733;</span><span style="color:#003399;font-size:14px;">&#9733;</span><span style="color:#003399;font-size:14px;">&#9733;</span><span style="color:#ccc;font-size:14px;">&#9733;</span></td>
+    </tr><tr>
+      <td class="ep-lang-name">Dutch</td>
+      <td>A2</td><td>A2</td><td>A2</td><td>A2</td><td>A2</td>
+      <td class="ep-stars"><span style="color:#003399;font-size:14px;">&#9733;</span><span style="color:#003399;font-size:14px;">&#9733;</span><span style="color:#ccc;font-size:14px;">&#9733;</span><span style="color:#ccc;font-size:14px;">&#9733;</span><span style="color:#ccc;font-size:14px;">&#9733;</span></td>
+    </tr></tbody>
+      </table>
+      <p class="ep-cefr-note">Levels: A1–A2 Basic · B1–B2 Independent · C1–C2 Proficient</p>
+    </section>
+  
+    <section class="ep-section">
+      <div class="ep-section-header"><span class="ep-section-icon"></span><h2>Skills</h2></div>
+      <p class="ep-bio" style="margin-bottom:12px">Data modeling, data visualization, machine learning, image processing, BI consulting, data integration, security management, and training across multiple industries.</p>
+      <p class="ep-skills-list"><span class="ep-skill-tag">Communication between IT and business users</span> <span class="ep-skill-tag">Teaching and training clients</span> <span class="ep-skill-tag">Creating user-friendly interfaces</span> <span class="ep-skill-tag">Problem-solving complex technical challenges</span> <span class="ep-skill-tag">Data Visualization</span> <span class="ep-skill-tag">Data Modeling</span> <span class="ep-skill-tag">Machine Learning</span> <span class="ep-skill-tag">Image Processing</span> <span class="ep-skill-tag">BI Consulting</span> <span class="ep-skill-tag">Data Integration</span> <span class="ep-skill-tag">Cloud Migration</span> <span class="ep-skill-tag">Security Management</span> <span class="ep-skill-tag">Reporting &amp; Dashboarding</span> <span class="ep-skill-tag">Training &amp; Coaching</span> <span class="ep-skill-tag">Qlik Sense</span> <span class="ep-skill-tag">QlikView</span> <span class="ep-skill-tag">Qlik Cloud</span> <span class="ep-skill-tag">QCDI (Qlik Cloud Data Integration)</span> <span class="ep-skill-tag">NPrinting</span> <span class="ep-skill-tag">Alteryx</span> <span class="ep-skill-tag">Snowflake</span> <span class="ep-skill-tag">SAP HANA</span> <span class="ep-skill-tag">SAP S/4HANA Cloud</span> <span class="ep-skill-tag">Vizlib Writeback</span> <span class="ep-skill-tag">Smartsheet</span> <span class="ep-skill-tag">Power BI</span> <span class="ep-skill-tag">JavaScript</span> <span class="ep-skill-tag">CSS</span> <span class="ep-skill-tag">HTML</span> <span class="ep-skill-tag">XML</span> <span class="ep-skill-tag">Web API</span> <span class="ep-skill-tag">Oracle DB</span> <span class="ep-skill-tag">MSSQL</span> <span class="ep-skill-tag">DB2</span> <span class="ep-skill-tag">PostgreSQL</span> <span class="ep-skill-tag">Navision</span> <span class="ep-skill-tag">SharePoint</span> <span class="ep-skill-tag">WorkFront</span> <span class="ep-skill-tag">Python</span></p>
+    </section>
+</div>
+</body>
+</html>
