@@ -638,7 +638,7 @@ if (uploadCard) {
     e.preventDefault();
     uploadCard.classList.remove('dragover');
     const file = e.dataTransfer.files[0];
-    if (file && file.name.endsWith('.docx')) {
+    if (file && (file.name.endsWith('.docx') || file.name.endsWith('.pdf'))) {
       const dt = new DataTransfer();
       dt.items.add(file);
       fileInput.files = dt.files;

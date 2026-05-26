@@ -62,11 +62,11 @@
         <div class="upload-card">
           <div class="upload-icon">📄</div>
           <h2>Import a Beyond Data CV</h2>
-          <p>Drop a <code>.docx</code> file here or click to browse.<br>
+          <p>Drop a <code>.docx</code> or <code>.pdf</code> file here or click to browse.<br>
              All fields will be auto-filled — you can edit before generating.</p>
           <label class="btn-upload-label" for="file-input">
             Choose file
-            <input type="file" id="file-input" accept=".docx" hidden>
+            <input type="file" id="file-input" accept=".docx,.pdf" hidden>
           </label>
           <div id="upload-filename" class="upload-filename"></div>
           <button class="btn-primary" id="btn-parse" disabled>✨ Parse with Claude AI</button>
@@ -86,10 +86,10 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>
   <script src="supabase-db.js"></script>
-  <script src="claude-parser.js?v=7"></script>
+  <script src="claude-parser.js?v=8"></script>
   <script src="parser.js?v=5"></script>
   <script src="generator.js?v=5"></script>
   <script src="europass-generator.js?v=2"></script>
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>

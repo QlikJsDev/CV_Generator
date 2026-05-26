@@ -212,11 +212,33 @@ async function parseWithClaude(file) {
   const apiKey = (window.SA_CONFIG && window.SA_CONFIG.anthropicApiKey) || '';
   if (!apiKey) throw new Error('API key not configured — check config.js or the GitHub Actions secret.');
 
-  const ab  = await file.arrayBuffer();
-  const zip = new PizZip(ab);
-  const cvText = extractStructuredText(zip);
+  const ab = await file.arrayBuffer();
+  const isPDF = file.name.toLowerCase().endsWith('.pdf');
 
-  console.log('[CV Parser] Structured text sent to Claude:\n', cvText);
+  let userMessage;
+  if (isPDF) {
+    // PDFs are sent directly to Claude as a native document — no text extraction needed
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(ab)));
+    userMessage = {
+      role: 'user',
+      content: [
+        {
+          type: 'document',
+          source: { type: 'base64', media_type: 'application/pdf', data: base64 },
+        },
+        { type: 'text', text: 'Extract all CV data from this PDF document.' },
+      ],
+    };
+    console.log('[CV Parser] Sending PDF directly to Claude');
+  } else {
+    const zip = new PizZip(ab);
+    const cvText = extractStructuredText(zip);
+    console.log('[CV Parser] Structured text sent to Claude:\n', cvText);
+    userMessage = {
+      role: 'user',
+      content: `Extract all CV data from the following text:\n\n${cvText}`,
+    };
+  }
 
   const resp = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -232,7 +254,7 @@ async function parseWithClaude(file) {
       system: SYSTEM,
       tools: [EXTRACT_TOOL],
       tool_choice: { type: 'tool', name: 'extract_cv' },
-      messages: [{ role: 'user', content: `Extract all CV data from the following text:\n\n${cvText}` }],
+      messages: [userMessage],
     }),
   });
 
