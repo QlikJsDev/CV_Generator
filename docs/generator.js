@@ -333,16 +333,22 @@ function buildBDNameBox(firstName, lastName, titles) {
 function buildBDBody(data, finalSectPr, listNumId) {
   const numId = listNumId || '1';
 
-  // BD-specific heading: numId=0 disables the auto-numbering inherited from BD Heading1 style
-  const bdH1 = t => `<w:p><w:pPr><w:pStyle w:val="Heading1"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="0"/></w:numPr></w:pPr>${run(t)}</w:p>`;
+  // All BD body text uses Urbanist explicitly \u2014 style defaults (Century Gothic / Century) are never used
+  // BD-specific heading: Urbanist, no sz override \u2192 inherits Heading1 style's sz=40 (20pt) for visual hierarchy
+  const bdH1 = t => `<w:p><w:pPr><w:pStyle w:val="Heading1"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="0"/></w:numPr></w:pPr>${run(t, { font: 'Urbanist' })}</w:p>`;
 
-  const pList = t => `<w:p><w:pPr><w:pStyle w:val="ListParagraph"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="${numId}"/></w:numPr></w:pPr>${run(t)}</w:p>`;
+  // ListParagraph body items: Urbanist 10pt (sz=20)
+  const pList = t => `<w:p><w:pPr><w:pStyle w:val="ListParagraph"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="${numId}"/></w:numPr></w:pPr>${run(t, { font: 'Urbanist', sz: 20 })}</w:p>`;
 
+  // JobDetails: title in blue, company in green \u2014 both Urbanist
   const pDetail = (title, company) => {
-    const r1 = title   ? run(title,               { color: '3756F5' })              : '';
-    const r2 = company ? run(' \u2022 ' + company, { color: '56AF89', bold: true }) : '';
+    const r1 = title   ? run(title,               { font: 'Urbanist', color: '3756F5' })              : '';
+    const r2 = company ? run(' \u2022 ' + company, { font: 'Urbanist', color: '56AF89', bold: true }) : '';
     return para('JobDetails', r1 + r2);
   };
+
+  // Whitetext (experience bullets): Urbanist 11pt (sz=22)
+  const bdPDesc = (t, bold = false) => para('Whitetext', run(t, { font: 'Urbanist', sz: 22, bold }));
 
   // BD-specific JobDates uses Urbanist (not Barlow)
   const bdPDates = t => para('JobDates', run(t, { font: 'Urbanist', sz: 22 }));
@@ -383,6 +389,16 @@ function buildBDBody(data, finalSectPr, listNumId) {
     });
   }
 
+  // Languages — in body as well as sidebar so they're always visible
+  if ((data.languages||[]).length) {
+    out.push(bdH1('Languages'));
+    data.languages.forEach(l => {
+      const prof  = Math.max(1, Math.min(5, parseInt(l.proficiency)||5));
+      const stars = '★'.repeat(prof) + '☆'.repeat(5 - prof);
+      out.push(pList(`${l.language||''}: ${stars}`));
+    });
+  }
+
   // Experiences
   const saExps  = (data.experiences||[]).filter(e => e.category !== 'pre_advisory');
   const preExps = (data.experiences||[]).filter(e => e.category === 'pre_advisory');
@@ -391,8 +407,8 @@ function buildBDBody(data, finalSectPr, listNumId) {
     exps.forEach(exp => {
       if (exp.dates) out.push(bdPDates(exp.dates));
       if (exp.title || exp.company) out.push(pDetail(exp.title||'', exp.company||''));
-      (exp.description||[]).filter(Boolean).forEach(d => out.push(pDesc(d)));
-      if (exp.tools) out.push(pDesc(exp.tools, true));  // no "Tools:" prefix in BD format
+      (exp.description||[]).filter(Boolean).forEach(d => out.push(bdPDesc(d)));
+      if (exp.tools) out.push(bdPDesc(exp.tools, true));
     });
   }
 
