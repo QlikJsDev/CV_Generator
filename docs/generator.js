@@ -311,11 +311,12 @@ function buildBDNameBox(firstName, lastName, titles) {
   const fullName = `${firstName||''} ${lastName||''}`.trim() || 'Name';
   const titleLines = (titles||[]).filter(Boolean);
 
-  const nameRun = `<w:r><w:rPr><w:b/><w:bCs/><w:sz w:val="40"/><w:szCs w:val="40"/></w:rPr><w:t>${esc(fullName)}</w:t></w:r>`;
+  const UB = `<w:rFonts w:ascii="Urbanist" w:hAnsi="Urbanist" w:cs="Urbanist"/>`;
+  const nameRun = `<w:r><w:rPr>${UB}<w:b/><w:bCs/><w:sz w:val="40"/><w:szCs w:val="40"/></w:rPr><w:t>${esc(fullName)}</w:t></w:r>`;
   // Each title on its own line via <w:br/>
   const titleRuns = titleLines.map(t =>
-    `<w:r><w:rPr><w:sz w:val="32"/><w:szCs w:val="32"/></w:rPr><w:br/></w:r>` +
-    `<w:r><w:rPr><w:sz w:val="32"/><w:szCs w:val="32"/></w:rPr><w:t>${esc(t)}</w:t></w:r>`
+    `<w:r><w:rPr>${UB}<w:sz w:val="32"/><w:szCs w:val="32"/></w:rPr><w:br/></w:r>` +
+    `<w:r><w:rPr>${UB}<w:sz w:val="32"/><w:szCs w:val="32"/></w:rPr><w:t>${esc(t)}</w:t></w:r>`
   ).join('');
 
   return `<w:txbxContent>`
@@ -347,8 +348,11 @@ function buildBDBody(data, finalSectPr, listNumId) {
     return para('JobDetails', r1 + r2);
   };
 
-  // Whitetext (experience bullets): Urbanist 11pt (sz=22)
-  const bdPDesc = (t, bold = false) => para('Whitetext', run(t, { font: 'Urbanist', sz: 22, bold }));
+  // Experience body text: Normal style + Urbanist override (Whitetext = purple 850FEA in BD template)
+  const bdPDesc = (t, bold = false) => para('Normal', run(t, { font: 'Urbanist', sz: 20, bold }));
+
+  // Sub-heading before experience bullet list
+  const bdPMissionHead = t => para('Normal', run(t, { font: 'Urbanist', sz: 20, bold: true, color: '3756F5' }));
 
   // BD-specific JobDates uses Urbanist (not Barlow)
   const bdPDates = t => para('JobDates', run(t, { font: 'Urbanist', sz: 22 }));
@@ -407,8 +411,13 @@ function buildBDBody(data, finalSectPr, listNumId) {
     exps.forEach(exp => {
       if (exp.dates) out.push(bdPDates(exp.dates));
       if (exp.title || exp.company) out.push(pDetail(exp.title||'', exp.company||''));
-      (exp.description||[]).filter(Boolean).forEach(d => out.push(bdPDesc(d)));
-      if (exp.tools) out.push(bdPDesc(exp.tools, true));
+      // Filter out any "Key responsibilities" header the parser may have captured
+      const desc = (exp.description||[]).filter(d => d && !/^key responsibilities/i.test(d));
+      if (desc.length) {
+        out.push(bdPMissionHead('Key responsibilities & Achievements'));
+        desc.forEach(d => out.push(bdPDesc(d)));
+      }
+      if (exp.tools) out.push(bdPDesc(`Tools: ${exp.tools}`, true));
     });
   }
 
