@@ -218,7 +218,13 @@ async function parseWithClaude(file) {
   let userMessage;
   if (isPDF) {
     // PDFs are sent directly to Claude as a native document — no text extraction needed
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(ab)));
+    // Chunked btoa to avoid stack overflow on large files
+    const bytes = new Uint8Array(ab);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += 8192) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+    }
+    const base64 = btoa(binary);
     userMessage = {
       role: 'user',
       content: [

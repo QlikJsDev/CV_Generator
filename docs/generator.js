@@ -376,21 +376,27 @@ function buildBDBody(data, finalSectPr, listNumId) {
   // Career timeline — Normal paragraphs directly after bio (no heading before them)
   (data.careerTimeline||[]).filter(e => e.dates||e.role).forEach(e => out.push(pTimeline(e)));
 
-  // Training & certifications
+  // Training & certifications — plain text (no bullets)
   const certs = data.certifications||[];
   if (certs.length) {
     out.push(bdH1('Training & certifications'));
-    certs.forEach(c => out.push(pList(c.year ? `${c.year}: ${c.name}` : c.name||'')));
+    certs.forEach(c => out.push(bdPDesc(c.year ? `${c.year}: ${c.name}` : c.name||'')));
   }
 
-  // Education — original order (not reversed)
+  // Education — plain text (no bullets), original order (not reversed)
   const edu = data.education||[];
   if (edu.length) {
     out.push(bdH1('Education'));
     edu.forEach(e => {
-      out.push(pList((e.years ? e.years+': ' : '') + (e.degree||'')));
-      if (e.institution) out.push(pList(e.institution));
+      out.push(bdPDesc((e.years ? e.years+': ' : '') + (e.degree||''), true));
+      if (e.institution) out.push(bdPDesc(e.institution));
     });
+  }
+
+  // Technical skills — also in body to guarantee visibility (sidebar has them too)
+  if ((data.technicalSkills||[]).length) {
+    out.push(bdH1('Technical skills'));
+    data.technicalSkills.filter(Boolean).forEach(s => out.push(pList(s)));
   }
 
   // Languages — in body as well as sidebar so they're always visible
