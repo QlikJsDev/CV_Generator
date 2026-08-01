@@ -193,7 +193,7 @@ let _bdTemplateCache  = null;
 
 async function generateCV(data) {
   if (!_templateCache) {
-    const resp = await fetch('word_templates/select_advisory.docx');
+    const resp = await fetch('word_templates/select_advisory.docx?v=1');
     if (!resp.ok) throw new Error('Failed to load template');
     _templateCache = await resp.arrayBuffer();
   }
@@ -526,7 +526,7 @@ function buildBDSidebarBlocks(data) {
 
 async function generateBDCV(data) {
   if (!_bdTemplateCache) {
-    const resp = await fetch('word_templates/beyond_data.docx');
+    const resp = await fetch('word_templates/beyond_data.docx?v=2');
     if (!resp.ok) throw new Error('Failed to load Beyond Data template');
     _bdTemplateCache = await resp.arrayBuffer();
   }
